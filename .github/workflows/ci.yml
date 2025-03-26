@@ -45,10 +45,14 @@ jobs:
             const testResultsPath = 'build/reports/tests/test/index.html';
             if (fs.existsSync(testResultsPath)) {
               const testResults = fs.readFileSync(testResultsPath, 'utf-8');
-              const tests = testResults.match(/<div class="counter">(\d+)<\/div>\s*<p>tests<\/p>/)[1];
-              const failures = testResults.match(/<div class="counter">(\d+)<\/div>\s*<p>failures<\/p>/)[1];
-              const skipped = testResults.match(/<div class="counter">(\d+)<\/div>\s*<p>ignored<\/p>/)[1];
-              const time = testResults.match(/<div class="counter">([\d.]+)s<\/div>\s*<p>duration<\/p>/)[1];
+              const testsMatch = testResults.match(/<div class="counter">(\d+)<\/div>\s*<p>tests<\/p>/);
+              const failuresMatch = testResults.match(/<div class="counter">(\d+)<\/div>\s*<p>failures<\/p>/);
+              const skippedMatch = testResults.match(/<div class="counter">(\d+)<\/div>\s*<p>ignored<\/p>/);
+              const timeMatch = testResults.match(/<div class="counter">([\d.]+)s<\/div>\s*<p>duration<\/p>/);
+              const tests = testsMatch ? testsMatch[1] : '0';
+              const failures = failuresMatch ? failuresMatch[1] : '0';
+              const skipped = skippedMatch ? skippedMatch[1] : '0';
+              const time = timeMatch ? timeMatch[1] : '0.0';              
               const comment = `
             ## Test Results
             - **Tests:** ${tests}

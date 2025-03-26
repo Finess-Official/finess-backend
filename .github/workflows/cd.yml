@@ -1,0 +1,111 @@
+name: Release
+on:
+  push:
+    branches:
+      - trunk
+
+permissions:
+  contents: write
+  packages: write
+  attestations: write
+  id-token: write
+  checks: write
+  pull-requests: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Workaround since docker requires the repository name to be lowercase
+      - name: downcase REPO
+        run: |
+          echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+      - name: use REPO
+        run: |
+          echo "The value of REPO is: ${{ env.REPO }}"
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Clean Gradle cache
+        run: ./gradlew clean
+
+      - name: Final testing before release
+        run: ./gradlew test
+
+      - name: Build jar with Gradle
+        run: ./gradlew bootJar -x test
+
+      - name: Build Docker image
+        run: ./gradlew bootBuildImage --imageName=backend -x test
+
+      - name: Tag Docker image
+        run: docker tag backend:latest ${{ env.REGISTRY }}/${{ env.REPO }}:${{ github.sha }}
+
+      - name: Upload JAR as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-artifact
+          path: build/libs/*.jar
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Docker Image to GHCR
+        run: docker push ${{ env.REGISTRY }}/${{ env.REPO }}:${{ github.sha }}
+
+      - name: Export Docker Image to Tar
+        run: docker save ${{ env.REGISTRY }}/${{ env.REPO }}:${{ github.sha }} -o backend_${{ github.sha }}.tar
+
+      # TODO: Add versioning to release
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v0.0.1-RC-${{ github.sha }}
+          name: Release v0.0.1-RC-${{ github.sha }}
+          draft: true
+          prerelease: true
+          body: |
+            ## Release Notes
+            - Docker image: ${{ env.REGISTRY }}/${{ env.REPO }}:${{ github.sha }}
+            - JAR file: finess-0.0.1-SNAPSHOT.jar
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload JAR to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/libs/finess-0.0.1-SNAPSHOT.jar
+          asset_name: finess-0.0.1-SNAPSHOT.jar
+          asset_content_type: application/java-archive
+
+      - name: Upload Docker Image Tar to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: backend_${{ github.sha }}.tar
+          asset_name: backend_${{ github.sha }}.tar
+          asset_content_type: application/x-tar
+
+      - name: Add release link to summary
+        run: |
+          echo "Release created: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
