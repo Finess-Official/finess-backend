@@ -1,0 +1,68 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - trunk
+
+permissions:
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 'wrapper'
+          cache-disabled: false
+          cache-cleanup: never
+          cache-read-only: false
+
+      - name: Build with Gradle
+        run: ./gradlew build -x test
+
+      - name: Run tests
+        run: ./gradlew test
+
+      - name: Report test results
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const testResultsPath = 'build/reports/tests/test/index.html';
+            if (fs.existsSync(testResultsPath)) {
+              const testResults = fs.readFileSync(testResultsPath, 'utf-8');
+              const tests = testResults.match(/<div class="counter">(\d+)<\/div>\s*<p>tests<\/p>/)[1];
+              const failures = testResults.match(/<div class="counter">(\d+)<\/div>\s*<p>failures<\/p>/)[1];
+              const skipped = testResults.match(/<div class="counter">(\d+)<\/div>\s*<p>ignored<\/p>/)[1];
+              const time = testResults.match(/<div class="counter">([\d.]+)s<\/div>\s*<p>duration<\/p>/)[1];
+              const comment = `
+            ## Test Results
+            - **Tests:** ${tests}
+            - **Failures:** ${failures}
+            - **Skipped:** ${skipped}
+            - **Time:** ${time} seconds
+              `;
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+              core.summary.addRaw(comment).write();
+            } else {
+              console.log('Test results file not found:', testResultsPath);
+            }
