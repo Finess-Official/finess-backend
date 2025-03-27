@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Test;
 @IntegrationTest
 class FinessApplicationIT {
 
-	@Test
-	void contextLoads() {
-	}
-
+  @Test
+  void contextLoads() {}
 }
