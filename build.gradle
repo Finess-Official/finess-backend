@@ -1,9 +1,19 @@
+buildscript {
+    ext {
+        openapiGeneratorVersion = "7.12.0"
+    }
+    dependencies {
+        classpath "org.openapitools:openapi-generator-gradle-plugin:$openapiGeneratorVersion"
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'com.diffplug.spotless' version '7.0.2'
     id 'jacoco'
+    id "org.openapi.generator" version "$openapiGeneratorVersion"
 }
 
 group = 'ru.finess'
@@ -31,6 +41,7 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.liquibase:liquibase-core'
     runtimeOnly 'org.postgresql:postgresql'
 
@@ -105,3 +116,56 @@ jacocoTestCoverageVerification {
     }
 }
 check.dependsOn jacocoTestCoverageVerification
+
+////////////////////////
+// OpenAPI Generator
+////////////////////////
+
+def specFiles = [
+]
+
+static def specNameToTaskName(spec) {
+    return spec.replaceAll("-api.yaml", "").split("-").collect { it.capitalize() }.join()
+}
+
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
+specFiles
+        .each { LinkedHashMap<String, String> spec ->
+            tasks.register("openApiGenerateFrom${specNameToTaskName(spec.input)}", GenerateTask) {
+                generatorName = 'spring'
+                inputSpec = "${rootDir}/src/main/resources/openapi/${spec.input}"
+                outputDir = layout.buildDirectory.dir("generated").get().asFile.absolutePath
+                apiPackage = spec.apiPackage
+                modelPackage = spec.modelPackage
+                generateApiTests = false
+                generateModelTests = false
+                modelNameSuffix = "Dto"
+                additionalProperties = [
+                        removeEnumValuePrefix: 'false'
+                ]
+                configOptions = [
+                        dateLibrary          : 'java8',
+                        delegatePattern      : 'true',
+                        interfaceOnly        : 'true',
+                        useTags              : 'true',
+                        useSpringBoot3       : 'true',
+                        useSwaggerUI         : 'false',
+                        openApiNullable      : 'false',
+                        documentationProvider: 'none'
+                ]
+            }
+        }
+
+sourceSets.main.java.srcDirs += layout.buildDirectory.dir("generated/src/main/java").get().asFile
+
+tasks.register('generateAllApis') {
+}
+
+generateAllApis.dependsOn {
+    specFiles.collect { spec -> "openApiGenerateFrom${specNameToTaskName(spec.input)}" }
+}
+
+tasks.named('compileJava') {
+    dependsOn generateAllApis
+}
