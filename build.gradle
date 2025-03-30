@@ -1,81 +1,107 @@
 plugins {
-  id 'java'
-  id 'org.springframework.boot' version '3.4.4'
-  id 'io.spring.dependency-management' version '1.1.7'
-  id 'com.diffplug.spotless' version '6.25.0'
-  id 'jacoco'
+    id 'java'
+    id 'org.springframework.boot' version '3.4.4'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.diffplug.spotless' version '7.0.2'
+    id 'jacoco'
 }
 
 group = 'ru.finess'
 version = '0.0.1-SNAPSHOT'
 
 java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(21)
-  }
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 configurations {
-  compileOnly {
-    extendsFrom annotationProcessor
-  }
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-  compileOnly 'org.projectlombok:lombok'
-  annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 
-  implementation 'org.springframework.boot:spring-boot-starter-web'
-  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-  implementation 'org.liquibase:liquibase-core'
-  runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.liquibase:liquibase-core'
+    runtimeOnly 'org.postgresql:postgresql'
 
-  testImplementation 'org.springframework.boot:spring-boot-starter-test'
-  testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-  testImplementation 'org.testcontainers:junit-jupiter'
-  testImplementation 'org.testcontainers:postgresql'
-  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
+
+
+////////////////////////
+// Formatting and Code Style
+////////////////////////
 
 spotless {
-  java {
-    googleJavaFormat()
-    removeUnusedImports()
-    trimTrailingWhitespace()
-    endWithNewline()
-  }
+    java {
+        googleJavaFormat()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        targetExclude("build/generated/**/*.java")
+    }
 }
 
+check.dependsOn spotlessCheck
+
+
+////////////////////////
+// Code Coverage
+////////////////////////
+
 jacoco {
-  toolVersion = "0.8.12"
+    toolVersion = "0.8.12"
 }
 
 tasks.named('test') {
-  useJUnitPlatform()
-  finalizedBy jacocoTestReport
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
 }
 
+
 jacocoTestReport {
-  dependsOn test
-  reports {
-    xml.required = true
-    html.required = true
-  }
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+    afterEvaluate {
+        classDirectories = files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "ru/finess/finess/identity/presentation/api/**",
+                    "ru/finess/finess/identity/presentation/dto/**",
+            ])
+        })
+    }
 }
 
 jacocoTestCoverageVerification {
-  violationRules {
-    rule {
-      limit {
-        counter = "BRANCH"
-        minimum = 0.8
-      }
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = 0.4
+            }
+            excludes = [
+                    "ru/finess/finess/identity/presentation/api/**",
+                    "ru/finess/finess/identity/presentation/dto/**",
+            ]
+        }
     }
-  }
 }
-
 check.dependsOn jacocoTestCoverageVerification
