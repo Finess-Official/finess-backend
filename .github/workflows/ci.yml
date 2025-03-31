@@ -34,7 +34,7 @@ jobs:
         run: ./gradlew build -x test
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test jacocoTestCoverageVerification
 
       - name: Report test results
         if: always()

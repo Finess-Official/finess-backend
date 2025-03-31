@@ -41,7 +41,7 @@ jobs:
         run: ./gradlew clean
 
       - name: Final testing before release
-        run: ./gradlew test
+        run: ./gradlew test jacocoTestCoverageVerification
 
       - name: Build jar with Gradle
         run: ./gradlew bootJar -x test

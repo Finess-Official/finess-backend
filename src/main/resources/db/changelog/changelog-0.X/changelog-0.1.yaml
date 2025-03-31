@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0
+      author: dnkutuzov
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+                - column:
+                    name: id
+                    type: uuid
+                    constraints:
+                        primaryKey: true
+                        nullable: false
+                - column:
+                    name: encoded_password
+                    type: VARCHAR(1024)
+                    constraints:
+                        nullable: false

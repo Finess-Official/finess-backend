@@ -1,0 +1,218 @@
+openapi: 3.0.3
+info:
+  title: "User Identity API"
+  description: >
+    API для работы с персональными данными пользователя
+  version: "0.1.0"
+servers:
+  - url: "{protocol}://{server}:{port}{basePath}"
+    variables:
+      protocol:
+        enum:
+          - "https"
+          - "http"
+        default: "https"
+      port:
+        enum:
+          - "443"
+          - "8080"
+        default: "443"
+      server:
+        enum:
+          - "finesspay.ru"
+          - "localhost"
+        default: "finesspay.ru"
+      basePath:
+        default: "/api/identity"
+tags:
+  - name: session-management
+    description: Управление пользователем и его сессией
+paths:
+  /v1/users:
+    post:
+      tags:
+        - session-management
+      summary: "Регистрация нового пользователя"
+      description: "Создание новой учетной записи пользователя"
+      operationId: "registerUser"
+      requestBody:
+        description: "Параметры регистрации пользователя"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegistrationParameters"
+      responses:
+        '201':
+          description: "Регистрация выполнена успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+  /v1/tokens:
+    post:
+      tags:
+        - session-management
+      summary: "Вход пользователя по паролю"
+      description: "Аутентификация пользователя с использованием пароля"
+      operationId: "signinUser"
+      requestBody:
+        description: "Параметры для входа"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserSigninParameters"
+      responses:
+        '200':
+          description: "Вход выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '401':
+          $ref: "#/components/responses/Unauthorized"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+  /v1/tokens:refresh:
+    post:
+      tags:
+        - session-management
+      summary: "Обновление токена сессии"
+      description: "Обновление токена сессии пользователя"
+      operationId: "refreshToken"
+      requestBody:
+        description: "Параметры для обновления токена"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokenRefreshParameters"
+      responses:
+        '200':
+          description: "Токен успешно обновлен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '401':
+          $ref: "#/components/responses/Unauthorized"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+components:
+  schemas:
+    UserRegistrationParameters:
+      type: object
+      properties:
+        password:
+          $ref: "#/components/schemas/UserPassword"
+      required:
+        - password
+    UserSigninParameters:
+      type: object
+      properties:
+        userId:
+          $ref: "#/components/schemas/UserId"
+        password:
+          $ref: "#/components/schemas/UserPassword"
+      required:
+        - userId
+        - password
+    TokenRefreshParameters:
+      type: object
+      properties:
+        refreshToken:
+          $ref: "#/components/schemas/RefreshToken"
+      required:
+        - refreshToken
+    Session:
+      type: object
+      properties:
+        sessionToken:
+          type: string
+          description: "JWT токен сессии"
+          example: "00Fpzf4en68pCXTsMjcX8JPMctzN2Wiw4LDOBL_9pe"
+        sessionExpiresAt:
+          type: string
+          format: date-time
+          description: "Дата и время окончания действия сессии"
+          example: "2015-11-03T10:15:57.000Z"
+        refreshToken:
+          $ref: "#/components/schemas/RefreshToken"
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+          description: "Дата и время окончания действия сессии"
+          example: "2015-11-03T10:15:57.000Z"
+        attributes:
+          type: object
+          description: "Аттрибуты сессии"
+          properties:
+            user:
+              $ref: "#/components/schemas/User"
+          required:
+            - user
+      required:
+        - sessionToken
+        - sessionExpiresAt
+        - refreshToken
+        - refreshTokenExpiresAt
+        - attributes
+    RefreshToken:
+      type: string
+      description: "JWT токен для обновления сессии"
+      example: "00Fpzf4en68pCXTsMjcX8JPMctzN2Wiw4LDOBL_9pe"
+    User:
+      type: object
+      description: "Пользователь системы"
+      properties:
+        id:
+          $ref: "#/components/schemas/UserId"
+      required:
+        - id
+    UserId:
+      type: string
+      format: uuid
+      description: "Уникальный айди пользователя"
+      example: "01961775-6c2d-752e-a795-b79236b4fa47"
+    UserPassword:
+      type: string
+      description: "Пароль пользователя"
+      example: "Example1"
+      pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{6,72}$"
+  responses:
+    BadRequest:
+      description: "Неверный формат данных запроса"
+    Unauthorized:
+      description: "Аутентификация не удалась - сессия не найдена"
+    InternalServerError:
+      description: "Внутренняя ошибка сервера - запрос не может быть обработан"
+    ServiceUnavailable:
+      description: "Сервис временно недоступен - попробуйте позже"
+    TooManyRequests:
+      description: "Слишком много запросов - превышен лимит"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
