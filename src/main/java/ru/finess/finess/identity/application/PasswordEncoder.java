@@ -7,4 +7,6 @@ import ru.finess.finess.identity.domain.UserPassword;
 public interface PasswordEncoder {
 
   UserEncodedPassword encode(@NonNull UserPassword password);
+
+  boolean matches(@NonNull UserPassword password, @NonNull UserEncodedPassword encodedPassword);
 }
