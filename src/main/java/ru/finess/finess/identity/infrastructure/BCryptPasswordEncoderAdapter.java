@@ -19,4 +19,10 @@ public class BCryptPasswordEncoderAdapter implements PasswordEncoder {
     String encode = passwordEncoder.encode(password.value());
     return new UserEncodedPassword(encode);
   }
+
+  @Override
+  public boolean matches(
+      @NonNull UserPassword password, @NonNull UserEncodedPassword encodedPassword) {
+    return passwordEncoder.matches(password.value(), encodedPassword.value());
+  }
 }

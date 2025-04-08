@@ -1,5 +1,6 @@
 package ru.finess.finess.identity.infrastructure;
 
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -12,6 +13,11 @@ import ru.finess.finess.identity.domain.UserId;
 public class RelationalUserRepository implements UserRepository {
 
   private final JpaUserRepository delegate;
+
+  @Override
+  public Optional<User> find(@NonNull UserId userId) {
+    return delegate.findById(userId);
+  }
 
   @Override
   public boolean exists(@NonNull UserId userId) {
