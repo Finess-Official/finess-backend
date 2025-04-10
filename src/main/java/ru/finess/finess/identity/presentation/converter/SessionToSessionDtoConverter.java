@@ -15,6 +15,9 @@ public class SessionToSessionDtoConverter implements Converter<Session, SessionD
     return new SessionDto()
         .sessionToken(session.token().value())
         .sessionExpiresAt(session.token().expirationTime())
+        // todo
+        .refreshToken("00Fpzf4en68pCXTsMjcX8JPMctzN2Wiw4LDOBL_9pe")
+        .refreshTokenExpiresAt(session.token().expirationTime().plusDays(1))
         .attributes(new SessionAttributesDto().user(new UserDto().id(session.user().value())));
   }
 }
