@@ -39,7 +39,7 @@ class UsersRestApiIT {
     mockMvc
         .perform(
             get("/api/identity/v1/current")
-                .header("Authorization", "Bearer " + session.token().value()))
+                .header("Authorization", "Bearer " + session.accessToken().value()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(user.id().value().toString()));
   }

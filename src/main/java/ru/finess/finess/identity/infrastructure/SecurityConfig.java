@@ -60,7 +60,7 @@ public class SecurityConfig {
     }
 
     private Optional<Session> getSession(HttpServletRequest request) {
-      return HttpUtils.getTokenFromRequest(request).flatMap(jwtValidator::validateSession);
+      return HttpUtils.getAccessTokenFromRequest(request).flatMap(jwtValidator::validateSession);
     }
   }
 

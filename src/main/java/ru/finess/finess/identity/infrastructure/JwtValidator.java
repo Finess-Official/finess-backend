@@ -24,17 +24,17 @@ public class JwtValidator {
         Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes())).build();
   }
 
-  public Optional<Session> validateSession(@NonNull String accessToken) {
+  public Optional<Session> validateSession(@NonNull String rawAccessToken) {
     try {
-      Jws<Claims> claimsJws = parser.parseClaimsJws(accessToken);
+      Jws<Claims> claimsJws = parser.parseClaimsJws(rawAccessToken);
       Claims body = claimsJws.getBody();
       OffsetDateTime expirationDate = DateUtils.toOffsetDateTime(body.getExpiration());
       UserId userId = UserId.fromString(body.getSubject());
 
-      SessionToken token = new SessionToken(accessToken, expirationDate);
-      return Optional.of(new Session(userId, token));
+      SessionToken accessToken = new SessionToken(rawAccessToken, expirationDate);
+      return Optional.of(new Session(userId, accessToken));
     } catch (JwtException | IllegalArgumentException e) {
-      log.error("Invalid JWT token: {}", e.getMessage());
+      log.error("Invalid JWT accessToken: {}", e.getMessage());
       return Optional.empty();
     }
   }
