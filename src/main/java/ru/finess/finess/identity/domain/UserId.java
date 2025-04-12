@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.NonNull;
 
 @Embeddable
 public record UserId(
@@ -18,5 +19,9 @@ public record UserId(
 
   public static UserId random() {
     return new UserId(UuidCreator.getTimeOrderedEpoch());
+  }
+
+  public static UserId fromString(@NonNull String id) {
+    return new UserId(UUID.fromString(id));
   }
 }
