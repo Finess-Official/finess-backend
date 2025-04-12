@@ -25,8 +25,9 @@ public class SessionCreationUseCase
   public Result<Session, UserNotFoundError> execute(@NonNull Parameters parameters) {
     UserId userId = parameters.userId();
     if (userRepository.exists(userId)) {
-      SessionToken token = tokenConstructor.createToken(userId, parameters.currentTime());
-      return Result.success(new Session(userId, token));
+      SessionToken accessToken =
+          tokenConstructor.createAccessToken(userId, parameters.currentTime());
+      return Result.success(new Session(userId, accessToken));
     } else {
       return Result.error(new UserNotFoundError(userId));
     }

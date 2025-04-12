@@ -11,7 +11,7 @@ public final class HttpUtils {
 
   private static final Pattern BEARER_PATTERN = Pattern.compile("Bearer (.+)");
 
-  public static Optional<String> getTokenFromRequest(HttpServletRequest servletRequest) {
+  public static Optional<String> getAccessTokenFromRequest(HttpServletRequest servletRequest) {
     String bearer = servletRequest.getHeader("Authorization");
     if (bearer == null) {
       return Optional.empty();

@@ -13,11 +13,11 @@ public class SessionToSessionDtoConverter implements Converter<Session, SessionD
   @Override
   public SessionDto convert(Session session) {
     return new SessionDto()
-        .sessionToken(session.token().value())
-        .sessionExpiresAt(session.token().expirationTime())
+        .sessionToken(session.accessToken().value())
+        .sessionExpiresAt(session.accessToken().expirationTime())
         // todo
         .refreshToken("00Fpzf4en68pCXTsMjcX8JPMctzN2Wiw4LDOBL_9pe")
-        .refreshTokenExpiresAt(session.token().expirationTime().plusDays(1))
+        .refreshTokenExpiresAt(session.accessToken().expirationTime().plusDays(1))
         .attributes(new SessionAttributesDto().user(new UserDto().id(session.user().value())));
   }
 }

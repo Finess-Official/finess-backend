@@ -17,25 +17,26 @@ import ru.finess.finess.identity.domain.UserId;
 @Component
 public class JwtTokenConstructor implements TokenConstructor {
 
-  private final Duration expirationDuration;
-  private final SecretKey key;
+  private final Duration accessExpirationDuration;
+  private final SecretKey accessKey;
 
   public JwtTokenConstructor(
-      @Value("${session.jwt.access.key}") String secretKey,
-      @Value("${session.jwt.access.expirationDuration}") Duration expirationDuration) {
-    this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
-    this.expirationDuration = expirationDuration;
+      @Value("${session.jwt.access.key}") String accessSecretKey,
+      @Value("${session.jwt.access.expirationDuration}") Duration accessExpirationDuration) {
+    this.accessKey = Keys.hmacShaKeyFor(accessSecretKey.getBytes());
+    this.accessExpirationDuration = accessExpirationDuration;
   }
 
   @Override
-  public SessionToken createToken(@NonNull UserId userId, @NonNull OffsetDateTime currentTime) {
-    OffsetDateTime expirationTime = currentTime.plus(this.expirationDuration);
+  public SessionToken createAccessToken(
+      @NonNull UserId userId, @NonNull OffsetDateTime currentTime) {
+    OffsetDateTime expirationTime = currentTime.plus(this.accessExpirationDuration);
     String token =
         Jwts.builder()
             .setSubject(userId.value().toString())
             .setIssuedAt(Date.from(currentTime.toInstant()))
             .setExpiration(Date.from(expirationTime.toInstant()))
-            .signWith(key, SignatureAlgorithm.HS256)
+            .signWith(accessKey, SignatureAlgorithm.HS256)
             .compact();
     return new SessionToken(token, expirationTime);
   }

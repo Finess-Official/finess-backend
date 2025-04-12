@@ -6,5 +6,5 @@ import ru.finess.finess.identity.domain.UserId;
 
 public interface TokenConstructor {
 
-  SessionToken createToken(@NonNull UserId userId, @NonNull OffsetDateTime currentTime);
+  SessionToken createAccessToken(@NonNull UserId userId, @NonNull OffsetDateTime currentTime);
 }
