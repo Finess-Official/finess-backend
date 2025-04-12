@@ -27,7 +27,14 @@ public class SessionCreationUseCase
     if (userRepository.exists(userId)) {
       SessionToken accessToken =
           tokenConstructor.createAccessToken(userId, parameters.currentTime());
-      return Result.success(new Session(userId, accessToken));
+      SessionToken refreshToken =
+          tokenConstructor.createRefreshToken(userId, parameters.currentTime());
+      return Result.success(
+          Session.builder()
+              .user(userId)
+              .accessToken(accessToken)
+              .refreshToken(refreshToken)
+              .build());
     } else {
       return Result.error(new UserNotFoundError(userId));
     }

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import ru.finess.finess.IntegrationTest;
 import ru.finess.finess.common.UserMother;
 import ru.finess.finess.identity.domain.User;
@@ -33,15 +34,16 @@ class SessionManagementRestApiIT {
             }
         """;
 
-    // Act & Assert
-    mockMvc
-        .perform(
+    // Act
+    ResultActions actual =
+        mockMvc.perform(
             post("/api/identity/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
+                .content(requestBody));
+
+    // Assert
+    expectTokensExists(actual)
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.sessionToken").exists())
-        .andExpect(jsonPath("$.sessionExpiresAt").exists())
         .andExpect(jsonPath("$.attributes.user.id").exists());
   }
 
@@ -61,15 +63,16 @@ class SessionManagementRestApiIT {
             """
             .formatted(user.id().value(), password.value());
 
-    // Act & Assert
-    mockMvc
-        .perform(
+    // Act
+    ResultActions actual =
+        mockMvc.perform(
             post("/api/identity/v1/tokens")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
+                .content(requestBody));
+
+    // Assert
+    expectTokensExists(actual)
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.sessionToken").exists())
-        .andExpect(jsonPath("$.sessionExpiresAt").exists())
         .andExpect(jsonPath("$.attributes.user.id").value(user.id().value().toString()));
   }
 
@@ -78,7 +81,7 @@ class SessionManagementRestApiIT {
   void signinUserNotFound() throws Exception {
     // Arrange
     UserPassword password = new UserPassword("Example1");
-    User user = userMother.create(password);
+    userMother.create(password);
 
     String requestBody =
         """
@@ -121,5 +124,13 @@ class SessionManagementRestApiIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
         .andExpect(status().isUnauthorized());
+  }
+
+  private static ResultActions expectTokensExists(ResultActions actual) throws Exception {
+    return actual
+        .andExpect(jsonPath("$.sessionToken").exists())
+        .andExpect(jsonPath("$.sessionExpiresAt").exists())
+        .andExpect(jsonPath("$.refreshToken").exists())
+        .andExpect(jsonPath("$.refreshTokenExpiresAt").exists());
   }
 }
