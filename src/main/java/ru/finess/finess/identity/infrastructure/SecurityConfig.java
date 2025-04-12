@@ -1,7 +1,9 @@
 package ru.finess.finess.identity.infrastructure;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +18,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
@@ -23,6 +27,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedG
 import ru.finess.finess.common.date.HttpUtils;
 import ru.finess.finess.identity.application.Session;
 import ru.finess.finess.identity.application.UserRepository;
+import ru.finess.finess.identity.domain.User;
 
 @Configuration
 @EnableWebSecurity
@@ -95,6 +100,21 @@ public class SecurityConfig {
   public AuthenticationManager authenticationManager(
       AuthenticationConfiguration authenticationConfiguration) throws Exception {
     return authenticationConfiguration.getAuthenticationManager();
+  }
+
+  @Bean
+  public Supplier<Optional<User>> currentUser() {
+    return () -> {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      if (Objects.isNull(authentication)) {
+        return Optional.empty();
+      }
+      Object details = authentication.getDetails();
+      if (details instanceof AuthenticationDetails sessionDetails) {
+        return userRepository.find(sessionDetails.user());
+      }
+      return Optional.empty();
+    };
   }
 
   private JwtFilter preAuthenticatedProcessingFilter() {
