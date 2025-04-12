@@ -43,4 +43,54 @@ class UsersRestApiIT {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(user.id().value().toString()));
   }
+
+  @DisplayName("Check unauthorized access to current user")
+  @Test
+  void testGetCurrentUnauthorized() throws Exception {
+    // Arrange
+    userMother.create();
+
+    // Act
+    mockMvc.perform(get("/api/identity/v1/current")).andExpect(status().isUnauthorized());
+  }
+
+  @DisplayName("Check malformed JWT token")
+  @Test
+  void testGetCurrentMalformedJwt() throws Exception {
+    // Arrange
+    User user = userMother.create();
+    Session session =
+        sessionCreationUseCase
+            .execute(new SessionCreationUseCase.Parameters(user.id(), OffsetDateTime.now()))
+            .orOnErrorThrow(
+                ignored -> new RuntimeException("Failed to create session" + user.id()));
+
+    // Act
+    mockMvc
+        .perform(
+            get("/api/identity/v1/current")
+                .header("Authorization", "Bearer " + session.accessToken().value() + "malformed"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @DisplayName("Check expired JWT token")
+  @Test
+  void testGetCurrentExpiredJwt() throws Exception {
+    // Arrange
+    User user = userMother.create();
+    Session session =
+        sessionCreationUseCase
+            .execute(
+                new SessionCreationUseCase.Parameters(
+                    user.id(), OffsetDateTime.now().minusMinutes(35)))
+            .orOnErrorThrow(
+                ignored -> new RuntimeException("Failed to create session" + user.id()));
+
+    // Act
+    mockMvc
+        .perform(
+            get("/api/identity/v1/current")
+                .header("Authorization", "Bearer " + session.accessToken().value()))
+        .andExpect(status().isUnauthorized());
+  }
 }
