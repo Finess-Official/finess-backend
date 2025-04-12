@@ -32,7 +32,7 @@ public class JwtValidator {
       UserId userId = UserId.fromString(body.getSubject());
 
       SessionToken accessToken = new SessionToken(rawAccessToken, expirationDate);
-      return Optional.of(new Session(userId, accessToken));
+      return Optional.of(Session.builder().user(userId).accessToken(accessToken).build());
     } catch (JwtException | IllegalArgumentException e) {
       log.error("Invalid JWT accessToken: {}", e.getMessage());
       return Optional.empty();

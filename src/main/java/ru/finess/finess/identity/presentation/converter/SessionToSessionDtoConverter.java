@@ -1,5 +1,6 @@
 package ru.finess.finess.identity.presentation.converter;
 
+import java.util.Objects;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 import ru.finess.finess.identity.application.Session;
@@ -15,9 +16,8 @@ public class SessionToSessionDtoConverter implements Converter<Session, SessionD
     return new SessionDto()
         .sessionToken(session.accessToken().value())
         .sessionExpiresAt(session.accessToken().expirationTime())
-        // todo
-        .refreshToken("00Fpzf4en68pCXTsMjcX8JPMctzN2Wiw4LDOBL_9pe")
-        .refreshTokenExpiresAt(session.accessToken().expirationTime().plusDays(1))
+        .refreshToken(Objects.requireNonNull(session.refreshToken()).value())
+        .refreshTokenExpiresAt(Objects.requireNonNull(session.refreshToken()).expirationTime())
         .attributes(new SessionAttributesDto().user(new UserDto().id(session.user().value())));
   }
 }
