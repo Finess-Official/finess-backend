@@ -5,15 +5,16 @@ import lombok.*;
 import lombok.experimental.Accessors;
 import ru.finess.finess.identity.domain.UserId;
 
-@Accessors(fluent = true)
+@Getter
 @Entity
 @Table(name = "accounts")
+@Accessors(fluent = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Account {
 
-  @EqualsAndHashCode.Include @Getter @EmbeddedId private AccountId id;
+  @EqualsAndHashCode.Include @EmbeddedId private AccountId id;
 
   @AttributeOverride(
       name = "value",
