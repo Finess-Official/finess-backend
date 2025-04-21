@@ -1,0 +1,204 @@
+openapi: 3.0.3
+info:
+  title: "Payment API"
+  description: >
+    API для работы с платежами
+  version: "0.1.0"
+servers:
+  - url: "{protocol}://{server}:{port}{basePath}"
+    variables:
+      protocol:
+        enum:
+          - "http"
+          - "https"
+        default: "https"
+      port:
+        enum:
+          - "8080"
+          - "443"
+        default: "443"
+      server:
+        enum:
+          - "localhost"
+          - "finesspay.ru"
+        default: "finesspay.ru"
+      basePath:
+        default: "/api/payment"
+tags:
+  - name: accounts
+    description: Управление счетами
+  - name: qrcodes
+    description: Управление QR-кодами
+paths:
+  /v1/accounts:
+    post:
+      tags:
+        - accounts
+      summary: "Создание счета"
+      description: "Создание нового счета для входящих платежей"
+      operationId: "createAccount"
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: "Параметры создания счета"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountCreationParameters"
+      responses:
+        '201':
+          description: "Счет успешно создан"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+  /v1/qrcodes:
+    post:
+      tags:
+        - qrcodes
+      summary: "Создание QR-кода"
+      description: "Создание нового QR-кода для входящих платежей"
+      operationId: "createQRCode"
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: "Параметры создания QR-кода"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QRCodeCreationParameters"
+      responses:
+        '201':
+          description: "QR-код успешно создан"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QRCode"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+components:
+  schemas:
+    AccountCreationParameters:
+      type: object
+      properties:
+        ownerName:
+          $ref: "#/components/schemas/OwnerName"
+        inn:
+          $ref: "#/components/schemas/INN"
+        bik:
+          $ref: "#/components/schemas/BIK"
+        accountNumber:
+          $ref: "#/components/schemas/AccountNumber"
+      required:
+        - ownerName
+        - inn
+        - bik
+        - accountNumber
+    Account:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/AccountId"
+        ownerName:
+          $ref: "#/components/schemas/OwnerName"
+        inn:
+          $ref: "#/components/schemas/INN"
+        bik:
+          $ref: "#/components/schemas/BIK"
+        accountNumber:
+          $ref: "#/components/schemas/AccountNumber"
+      required:
+        - id
+        - ownerName
+        - inn
+        - bik
+        - accountNumber
+    AccountId:
+      type: string
+      format: uuid
+      description: "Идентификатор счета"
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    OwnerName:
+      type: string
+      description: "Имя владельца счета"
+      example: "Иванов Иван Иванович"
+    INN:
+      type: string
+      description: "ИНН владельца счета"
+      pattern: "^(\\d{12}|\\d{10}|0{1})$"
+      example: "123456789012"
+    BIK:
+      type: string
+      description: "БИК банка владельца счета"
+      pattern: "^\\d{9}$"
+      example: "123456789"
+    AccountNumber:
+      type: string
+      description: "Номер счета"
+      pattern: "^(\\d{20}|\\d{22})$"
+      example: "12345678901234567890"
+    QRCodeCreationParameters:
+      type: object
+      properties:
+        accountId:
+          $ref: "#/components/schemas/AccountId"
+        amount:
+          $ref: "#/components/schemas/QRCodeAmount"
+      required:
+        - accountId
+        - amount
+    QRCodeAmount:
+      type: number
+      format: float
+      description: "Сумма платежа. Должна быть положительным числом с двумя знаками после запятой"
+      example: 100.50
+    QRCode:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/QRCodeId"
+        accountId:
+          $ref: "#/components/schemas/AccountId"
+        amount:
+          $ref: "#/components/schemas/QRCodeAmount"
+      required:
+        - id
+        - accountId
+        - amount
+    QRCodeId:
+      type: string
+      description: "Идентификатор QR-кода"
+      example: "Lqj8a0"
+      minLength: 6
+  responses:
+    BadRequest:
+      description: "Неверный формат данных запроса"
+    Unauthorized:
+      description: "Аутентификация не удалась - сессия не найдена"
+    InternalServerError:
+      description: "Внутренняя ошибка сервера - запрос не может быть обработан"
+    ServiceUnavailable:
+      description: "Сервис временно недоступен - попробуйте позже"
+    TooManyRequests:
+      description: "Слишком много запросов - превышен лимит"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

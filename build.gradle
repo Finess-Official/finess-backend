@@ -137,6 +137,11 @@ def specFiles = [
                 apiPackage  : "ru.finess.finess.identity.presentation.api",
                 modelPackage: "ru.finess.finess.identity.presentation.dto",
         ],
+        [
+                input       : "payment-api.yaml",
+                apiPackage  : "ru.finess.finess.payment.presentation.api",
+                modelPackage: "ru.finess.finess.payment.presentation.dto",
+        ],
 ]
 
 static def specNameToTaskName(spec) {
