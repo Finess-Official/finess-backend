@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: dnkutuzov
+      changes:
+        - createTable:
+            tableName: accounts
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: owner_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: owner_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: inn
+                  type: VARCHAR(12)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bik
+                  type: VARCHAR(9)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: number
+                  type: VARCHAR(22)
+                  constraints:
+                    nullable: false
+
+
