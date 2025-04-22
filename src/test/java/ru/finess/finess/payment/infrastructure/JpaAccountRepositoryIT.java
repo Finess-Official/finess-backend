@@ -7,8 +7,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.finess.finess.IntegrationTest;
-import ru.finess.finess.identity.domain.UserId;
-import ru.finess.finess.payment.domain.*;
+import ru.finess.finess.payment.domain.Account;
+import ru.finess.finess.payment.domain.AccountMother;
 
 @IntegrationTest
 class JpaAccountRepositoryIT {
@@ -19,7 +19,7 @@ class JpaAccountRepositoryIT {
   @Test
   void testSave() {
     // Arrange
-    Account account = createAccount();
+    Account account = AccountMother.createAccount();
 
     // Act
     sut.save(account);
@@ -32,7 +32,7 @@ class JpaAccountRepositoryIT {
   @Test
   void testLoading() {
     // Arrange
-    Account account = createAccount();
+    Account account = AccountMother.createAccount();
 
     sut.save(account);
 
@@ -41,15 +41,5 @@ class JpaAccountRepositoryIT {
 
     // Assert
     assertEquals(account, actual);
-  }
-
-  private static Account createAccount() {
-    return Account.builder()
-        .ownerId(UserId.random())
-        .ownerName(new AccountOwnerName("Ivanov Ivan Ivanovich"))
-        .inn(new AccountINN("1234567890"))
-        .bik(new AccountBIK("123456789"))
-        .number(new AccountNumber("12345678901234567890"))
-        .build();
   }
 }
