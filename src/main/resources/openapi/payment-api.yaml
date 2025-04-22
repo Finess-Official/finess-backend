@@ -86,6 +86,8 @@ paths:
                 $ref: "#/components/schemas/QRCode"
         '400':
           $ref: "#/components/responses/BadRequest"
+        '404':
+          $ref: "#/components/responses/NotFound"
         '429':
           $ref: "#/components/responses/TooManyRequests"
         '500':
@@ -188,6 +190,8 @@ components:
       example: "Lqj8a0"
       minLength: 6
   responses:
+    NotFound:
+      description: "Ресурс не найден"
     BadRequest:
       description: "Неверный формат данных запроса"
     Unauthorized:
