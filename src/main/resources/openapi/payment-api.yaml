@@ -38,7 +38,7 @@ paths:
       description: "Создание нового счета для входящих платежей"
       operationId: "createAccount"
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         description: "Параметры создания счета"
         required: true
@@ -69,7 +69,7 @@ paths:
       description: "Создание нового QR-кода для входящих платежей"
       operationId: "createQRCode"
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         description: "Параметры создания QR-кода"
         required: true

@@ -65,7 +65,7 @@ paths:
       summary: "Текущий пользователь"
       operationId: "getCurrentUser"
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       responses:
         '200':
           description: "Текущий пользователь"
