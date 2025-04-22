@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: dnkutuzov
+      changes:
+        - createTable:
+            tableName: payment_qrcodes
+            columns:
+              - column:
+                  name: id
+                  type: varchar(256)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: numeric(8, 2)
+                  constraints:
+                    nullable: false
+        - createSequence:
+            sequenceName: payment_qrcode_id_sq
+            startValue: 1

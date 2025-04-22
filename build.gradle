@@ -38,6 +38,7 @@ repositories {
 dependencies {
     implementation 'com.github.sviperll:result4j:1.2.0'
     implementation 'com.github.f4b6a3:uuid-creator:6.1.0'
+    implementation 'org.sqids:sqids:0.1.0'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

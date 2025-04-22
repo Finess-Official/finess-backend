@@ -168,6 +168,7 @@ components:
       format: float
       description: "Сумма платежа. Должна быть положительным числом с двумя знаками после запятой"
       example: 100.50
+      maximum: 99999999.99
     QRCode:
       type: object
       properties:
