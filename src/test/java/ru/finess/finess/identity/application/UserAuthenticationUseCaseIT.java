@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.finess.finess.IntegrationTest;
 import ru.finess.finess.common.UserMother;
-import ru.finess.finess.identity.application.UserAuthenticationUseCase.AuthenticationError;
+import ru.finess.finess.identity.application.UserAuthenticationUseCase.Error;
 import ru.finess.finess.identity.domain.User;
 import ru.finess.finess.identity.domain.UserId;
 import ru.finess.finess.identity.domain.UserPassword;
@@ -31,7 +31,7 @@ class UserAuthenticationUseCaseIT {
         new UserAuthenticationUseCase.Parameters(user.id(), password);
 
     // Act
-    Result<User, AuthenticationError> result = sut.execute(parameters);
+    Result<User, Error> result = sut.execute(parameters);
 
     // Assert
     assertFalse(result.isError());
@@ -48,10 +48,10 @@ class UserAuthenticationUseCaseIT {
             user.id(), new UserPassword("SomeWrongPassword21"));
 
     // Act
-    Result<User, AuthenticationError> result = sut.execute(parameters);
+    Result<User, Error> result = sut.execute(parameters);
 
     // Assert
-    assertEquals(result, Result.error(new AuthenticationError.InvalidPassword(user.id())));
+    assertEquals(result, Result.error(new Error.InvalidPassword(user.id())));
   }
 
   @DisplayName("Check user not found")
@@ -64,9 +64,9 @@ class UserAuthenticationUseCaseIT {
         new UserAuthenticationUseCase.Parameters(random, new UserPassword("SomePwd21"));
 
     // Act
-    Result<User, AuthenticationError> result = sut.execute(parameters);
+    Result<User, Error> result = sut.execute(parameters);
 
     // Assert
-    assertEquals(result, Result.error(new AuthenticationError.UserNotFound(random)));
+    assertEquals(result, Result.error(new Error.UserNotFound(random)));
   }
 }

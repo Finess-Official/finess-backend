@@ -4,7 +4,7 @@ import com.github.sviperll.result4j.Result;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.finess.finess.common.application.TransactionWrapper;
+import org.springframework.transaction.annotation.Transactional;
 import ru.finess.finess.common.application.UseCase;
 import ru.finess.finess.identity.domain.User;
 import ru.finess.finess.identity.domain.UserId;
@@ -14,39 +14,37 @@ import ru.finess.finess.identity.domain.UserPassword;
 @RequiredArgsConstructor
 public class UserAuthenticationUseCase
     implements UseCase<
-        User, UserAuthenticationUseCase.AuthenticationError, UserAuthenticationUseCase.Parameters> {
+        User, UserAuthenticationUseCase.Error, UserAuthenticationUseCase.Parameters> {
 
   public record Parameters(@NonNull UserId user, @NonNull UserPassword password) {}
 
-  public sealed interface AuthenticationError
-      permits AuthenticationError.UserNotFound, AuthenticationError.InvalidPassword {
-    record UserNotFound(UserId userId) implements AuthenticationError {}
+  public sealed interface Error permits Error.UserNotFound, Error.InvalidPassword {
 
-    record InvalidPassword(UserId userId) implements AuthenticationError {}
+    record UserNotFound(UserId userId) implements Error {}
+
+    record InvalidPassword(UserId userId) implements Error {}
   }
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
-  private final TransactionWrapper transactionWrapper;
 
+  @Transactional(readOnly = true)
   @Override
-  public Result<User, AuthenticationError> execute(@NonNull Parameters parameters) {
+  public Result<User, Error> execute(@NonNull Parameters parameters) {
     UserId userId = parameters.user();
     UserPassword password = parameters.password();
 
-    return transactionWrapper.execute(
-        () ->
-            userRepository
-                .find(userId)
-                .map(
-                    user -> {
-                      if (passwordEncoder.matches(password, user.hashedPassword())) {
-                        return Result.<User, AuthenticationError>success(user);
-                      } else {
-                        return Result.<User, AuthenticationError>error(
-                            new AuthenticationError.InvalidPassword(userId));
-                      }
-                    })
-                .orElseGet(() -> Result.error(new AuthenticationError.UserNotFound(userId))));
+    return userRepository
+        .findById(userId)
+        .map(user -> authenticateUser(user, password))
+        .orElseGet(() -> Result.error(new Error.UserNotFound(userId)));
+  }
+
+  private Result<User, Error> authenticateUser(User user, UserPassword password) {
+    if (passwordEncoder.matches(password, user.hashedPassword())) {
+      return Result.success(user);
+    } else {
+      return Result.error(new Error.InvalidPassword(user.id()));
+    }
   }
 }

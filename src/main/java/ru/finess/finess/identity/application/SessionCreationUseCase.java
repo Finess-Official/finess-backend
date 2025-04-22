@@ -6,6 +6,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.finess.finess.common.application.UseCase;
+import ru.finess.finess.identity.domain.Session;
+import ru.finess.finess.identity.domain.SessionToken;
 import ru.finess.finess.identity.domain.UserId;
 
 @Service
@@ -24,7 +26,7 @@ public class SessionCreationUseCase
   @Override
   public Result<Session, UserNotFoundError> execute(@NonNull Parameters parameters) {
     UserId userId = parameters.userId();
-    if (userRepository.exists(userId)) {
+    if (userRepository.existsById(userId)) {
       SessionToken accessToken =
           tokenConstructor.createAccessToken(userId, parameters.currentTime());
       SessionToken refreshToken =

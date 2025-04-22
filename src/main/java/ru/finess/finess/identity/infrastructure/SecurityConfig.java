@@ -25,9 +25,9 @@ import org.springframework.security.web.authentication.preauth.AbstractPreAuthen
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedGrantedAuthoritiesUserDetailsService;
 import ru.finess.finess.common.date.HttpUtils;
-import ru.finess.finess.identity.application.Session;
 import ru.finess.finess.identity.application.UserRepository;
-import ru.finess.finess.identity.domain.User;
+import ru.finess.finess.identity.domain.Session;
+import ru.finess.finess.identity.domain.UserId;
 
 @Configuration
 @EnableWebSecurity
@@ -103,15 +103,15 @@ public class SecurityConfig {
   }
 
   @Bean
-  public Supplier<Optional<User>> currentUser() {
+  public Supplier<Optional<UserId>> currentUserSupplier() {
     return () -> {
       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
       if (Objects.isNull(authentication)) {
         return Optional.empty();
       }
       Object details = authentication.getDetails();
-      if (details instanceof AuthenticationDetails sessionDetails) {
-        return userRepository.find(sessionDetails.user());
+      if (details instanceof AuthenticationDetails(UserId user)) {
+        return Optional.of(user);
       }
       return Optional.empty();
     };

@@ -3,7 +3,7 @@ package ru.finess.finess.identity.presentation.converter;
 import java.util.Objects;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import ru.finess.finess.identity.application.Session;
+import ru.finess.finess.identity.domain.Session;
 import ru.finess.finess.identity.presentation.dto.SessionAttributesDto;
 import ru.finess.finess.identity.presentation.dto.SessionDto;
 import ru.finess.finess.identity.presentation.dto.UserDto;

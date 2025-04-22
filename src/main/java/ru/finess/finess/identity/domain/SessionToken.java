@@ -1,4 +1,4 @@
-package ru.finess.finess.identity.application;
+package ru.finess.finess.identity.domain;
 
 import java.time.OffsetDateTime;
 import lombok.NonNull;

@@ -1,6 +1,7 @@
 package ru.finess.finess.identity.presentation;
 
-import static ru.finess.finess.identity.application.UserAuthenticationUseCase.AuthenticationError.*;
+import static ru.finess.finess.identity.application.UserAuthenticationUseCase.Error.InvalidPassword;
+import static ru.finess.finess.identity.application.UserAuthenticationUseCase.Error.UserNotFound;
 
 import com.github.sviperll.result4j.Result;
 import java.time.OffsetDateTime;
@@ -11,10 +12,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.finess.finess.identity.application.Session;
 import ru.finess.finess.identity.application.SessionCreationUseCase;
 import ru.finess.finess.identity.application.UserAuthenticationUseCase;
 import ru.finess.finess.identity.application.UserRegistrationUseCase;
+import ru.finess.finess.identity.domain.Session;
 import ru.finess.finess.identity.domain.User;
 import ru.finess.finess.identity.domain.UserId;
 import ru.finess.finess.identity.domain.UserPassword;
@@ -40,9 +41,9 @@ public class SessionManagementRestApi implements SessionManagementApi {
     UserPassword password = new UserPassword(userRegistrationParametersDto.getPassword());
 
     return registerUser(password)
-        .map(this::createSession)
+        .flatMap(this::createSession)
         .map(this::toDto)
-        .recoverError(status -> ResponseEntity.status(status).build());
+        .recoverError(error -> ResponseEntity.status(error).build());
   }
 
   @Override
@@ -51,7 +52,7 @@ public class SessionManagementRestApi implements SessionManagementApi {
     UserPassword password = new UserPassword(userSigninParametersDto.getPassword());
 
     return signinUser(user, password)
-        .map(this::createSession)
+        .flatMap(this::createSession)
         .map(this::toDto)
         .recoverError(error -> ResponseEntity.status(error).build());
   }
@@ -65,12 +66,12 @@ public class SessionManagementRestApi implements SessionManagementApi {
         .mapError(ignored -> HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  private Session createSession(User user) {
+  private Result<Session, HttpStatus> createSession(User user) {
     SessionCreationUseCase.Parameters parameters =
         new SessionCreationUseCase.Parameters(user.id(), OffsetDateTime.now());
     return sessionCreationUseCase
         .execute(parameters)
-        .orOnErrorThrow(error -> new RuntimeException(error.toString()));
+        .mapError(ignored -> HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   private ResponseEntity<SessionDto> toDto(Session session) {
@@ -84,12 +85,10 @@ public class SessionManagementRestApi implements SessionManagementApi {
     return userAuthenticationUseCase
         .execute(parameters)
         .mapError(
-            error -> {
-              log.error("Error during user authentication: {}", error);
-              return switch (error) {
-                case UserNotFound userNotFound -> HttpStatus.NOT_FOUND;
-                case InvalidPassword invalidPassword -> HttpStatus.UNAUTHORIZED;
-              };
-            });
+            error ->
+                switch (error) {
+                  case UserNotFound ignored -> HttpStatus.NOT_FOUND;
+                  case InvalidPassword ignored -> HttpStatus.UNAUTHORIZED;
+                });
   }
 }
