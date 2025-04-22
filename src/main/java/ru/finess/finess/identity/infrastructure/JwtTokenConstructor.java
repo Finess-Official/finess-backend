@@ -10,8 +10,8 @@ import javax.crypto.SecretKey;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import ru.finess.finess.identity.application.SessionToken;
 import ru.finess.finess.identity.application.TokenConstructor;
+import ru.finess.finess.identity.domain.SessionToken;
 import ru.finess.finess.identity.domain.UserId;
 
 @Component

@@ -1,8 +1,7 @@
-package ru.finess.finess.identity.application;
+package ru.finess.finess.identity.domain;
 
 import lombok.Builder;
 import lombok.NonNull;
-import ru.finess.finess.identity.domain.UserId;
 
 @Builder
 public record Session(

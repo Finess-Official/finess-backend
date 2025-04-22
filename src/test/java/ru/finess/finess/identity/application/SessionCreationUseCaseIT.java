@@ -1,6 +1,6 @@
 package ru.finess.finess.identity.application;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.github.sviperll.result4j.Result;
@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.finess.finess.IntegrationTest;
 import ru.finess.finess.common.UserMother;
+import ru.finess.finess.identity.domain.Session;
 import ru.finess.finess.identity.domain.User;
 import ru.finess.finess.identity.domain.UserId;
 

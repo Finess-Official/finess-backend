@@ -11,8 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.finess.finess.IntegrationTest;
 import ru.finess.finess.common.UserMother;
-import ru.finess.finess.identity.application.Session;
 import ru.finess.finess.identity.application.SessionCreationUseCase;
+import ru.finess.finess.identity.domain.Session;
 import ru.finess.finess.identity.domain.User;
 
 @IntegrationTest

@@ -4,7 +4,7 @@ import com.github.sviperll.result4j.Result;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.finess.finess.common.application.TransactionWrapper;
+import org.springframework.transaction.annotation.Transactional;
 import ru.finess.finess.common.application.UseCase;
 import ru.finess.finess.identity.domain.User;
 import ru.finess.finess.identity.domain.UserEncodedPassword;
@@ -16,23 +16,18 @@ public class UserRegistrationUseCase
     implements UseCase<User, Void, UserRegistrationUseCase.Parameters> {
 
   private final PasswordEncoder passwordEncoder;
-  private final TransactionWrapper transactionWrapper;
   private final UserRepository userRepository;
 
   public record Parameters(@NonNull UserPassword password) {}
 
+  @Transactional
   @Override
   public Result<User, Void> execute(@NonNull Parameters parameters) {
-    User createdUser =
-        transactionWrapper.execute(
-            () -> {
-              UserPassword password = parameters.password();
-              UserEncodedPassword encodedPassword = passwordEncoder.encode(password);
+    UserPassword password = parameters.password();
+    UserEncodedPassword encodedPassword = passwordEncoder.encode(password);
 
-              User user = User.builder().encodedPassword(encodedPassword).build();
-              userRepository.save(user);
-              return user;
-            });
-    return Result.success(createdUser);
+    User user = User.builder().encodedPassword(encodedPassword).build();
+    userRepository.save(user);
+    return Result.success(user);
   }
 }
