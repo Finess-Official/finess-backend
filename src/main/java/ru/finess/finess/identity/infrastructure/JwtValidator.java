@@ -17,16 +17,22 @@ import ru.finess.finess.identity.domain.UserId;
 @Component
 public class JwtValidator {
 
-  private final JwtParser parser;
+  private final JwtParser accessTokenParser;
+  private final JwtParser refreshTokenParser;
 
-  public JwtValidator(@Value("${session.jwt.access.key}") String secretKey) {
-    this.parser =
-        Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes())).build();
+  public JwtValidator(
+      @Value("${session.jwt.access.key}") String accessKey,
+      @Value("${session.jwt.refresh.key}") String refreshKey) {
+
+    this.accessTokenParser =
+        Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(accessKey.getBytes())).build();
+    this.refreshTokenParser =
+        Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(refreshKey.getBytes())).build();
   }
 
   public Optional<Session> validateSession(@NonNull String rawAccessToken) {
     try {
-      Jws<Claims> claimsJws = parser.parseClaimsJws(rawAccessToken);
+      Jws<Claims> claimsJws = accessTokenParser.parseClaimsJws(rawAccessToken);
       Claims body = claimsJws.getBody();
       OffsetDateTime expirationDate = DateUtils.toOffsetDateTime(body.getExpiration());
       UserId userId = UserId.fromString(body.getSubject());
@@ -35,6 +41,19 @@ public class JwtValidator {
       return Optional.of(Session.builder().user(userId).accessToken(accessToken).build());
     } catch (JwtException | IllegalArgumentException e) {
       log.error("Invalid JWT accessToken: {}", e.getMessage());
+      return Optional.empty();
+    }
+  }
+
+  public Optional<UserId> getSubject(@NonNull String rawRefreshToken) {
+    try {
+      Jws<Claims> claimsJws = refreshTokenParser.parseClaimsJws(rawRefreshToken);
+      Claims body = claimsJws.getBody();
+      UserId userId = UserId.fromString(body.getSubject());
+
+      return Optional.of(userId);
+    } catch (JwtException | IllegalArgumentException e) {
+      log.error("Invalid JWT refreshToken: {}", e.getMessage());
       return Optional.empty();
     }
   }
