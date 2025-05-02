@@ -341,8 +341,8 @@ components:
             - "INITIALIZED"
             - "IN_PROGRESS"
             - "FAILED"
-        acquiringPaymentId:
-          $ref: "#/components/schemas/AcquiringPaymentId"
+        acquiringPaymentUrl:
+          $ref: "#/components/schemas/AcquiringPaymentUrl"
         createdAt:
           type: string
           format: date-time
@@ -357,11 +357,11 @@ components:
       description: "Идентификатор задачи инициализации платежа"
       format: uuid
       example: "550e8400-e29b-41d4-a716-446655440000"
-    AcquiringPaymentId:
+    AcquiringPaymentUrl:
       type: string
-      description: "Идентификатор платежа в системе эквайера"
-      format: uuid
-      example: "550e8400-e29b-41d4-a716-446655440000"
+      description: "Ссылка на платежную форму"
+      format: uri
+      example: "https://securepay.tinkoff.ru/new/fU1ppgqa"
   responses:
     NotFound:
       description: "Ресурс не найден"

@@ -1,4 +1,4 @@
-package ru.finess.finess.common.date;
+package ru.finess.finess.common.utils;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;

@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: dnkutuzov
+      changes:
+        - createTable:
+            tableName: payment_initializations
+            columns:
+              - column:
+                  name: status
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: acquiring_payment_url
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: retry_count
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    unique: true
+              - column:
+                  name: initiator_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: qr_code_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
