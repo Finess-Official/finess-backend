@@ -1,4 +1,4 @@
-package ru.finess.finess.common.date;
+package ru.finess.finess.common.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;

@@ -24,7 +24,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedGrantedAuthoritiesUserDetailsService;
-import ru.finess.finess.common.date.HttpUtils;
+import ru.finess.finess.common.utils.HttpUtils;
 import ru.finess.finess.identity.application.UserRepository;
 import ru.finess.finess.identity.domain.Session;
 import ru.finess.finess.identity.domain.UserId;

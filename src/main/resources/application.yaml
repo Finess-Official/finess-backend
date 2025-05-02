@@ -7,3 +7,17 @@ spring:
 
   jpa:
     open-in-view: false
+
+finess:
+  payment:
+    initialization:
+      fixedDelay: PT1M
+      batchSize: 10
+      retryLimit: 3
+      executor:
+        corePoolSize: 3
+        maxPoolSize: 5
+        queueCapacity: 100
+
+v2:
+  url: https://rest-api-test.tinkoff.ru
