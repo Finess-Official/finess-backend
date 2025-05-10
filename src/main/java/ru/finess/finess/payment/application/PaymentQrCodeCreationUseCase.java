@@ -21,6 +21,7 @@ public class PaymentQrCodeCreationUseCase
 
   private final AccountRepository accountRepository;
   private final QrCodeIdGenerator qrCodeIdGenerator;
+  private final PaymentQrCodeRepository paymentQrCodeRepository;
 
   public record Parameters(
       @NonNull UserId currentUser, @NonNull AccountId accountId, @NonNull PaymentAmount amount) {}
@@ -34,6 +35,7 @@ public class PaymentQrCodeCreationUseCase
       PaymentQrCodeId qrCodeId = qrCodeIdGenerator.generate();
       PaymentQrCode qrCode =
           PaymentQrCode.of(qrCodeId, parameters.accountId(), parameters.amount());
+      paymentQrCodeRepository.save(qrCode);
       return Result.success(qrCode);
     } else {
       return Result.error(new AccountNotFound(parameters.accountId()));
