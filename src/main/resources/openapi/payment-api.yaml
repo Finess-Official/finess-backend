@@ -29,6 +29,8 @@ tags:
     description: Управление счетами
   - name: qrcodes
     description: Управление QR-кодами
+  - name: payments
+    description: Работа с платежами
 paths:
   /v1/accounts:
     post:
@@ -61,6 +63,38 @@ paths:
           $ref: "#/components/responses/InternalServerError"
         '503':
           $ref: "#/components/responses/ServiceUnavailable"
+  /v1/accounts/{id}:
+    get:
+      tags:
+        - accounts
+      summary: "Получение счета"
+      operationId: "getAccount"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "Идентификатор счета"
+          schema:
+            $ref: "#/components/schemas/AccountId"
+      responses:
+        '200':
+          description: "Счет успешно получен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
   /v1/qrcodes:
     post:
       tags:
@@ -84,6 +118,103 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/QRCode"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+  /v1/qrcodes/{id}:
+    get:
+      tags:
+        - qrcodes
+      summary: "Получение QR-кода"
+      operationId: "getQRCode"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "Идентификатор QR-кода"
+          schema:
+            $ref: "#/components/schemas/QRCodeId"
+      responses:
+        '200':
+          description: "QR-код успешно получен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QRCode"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+  /v1/payments:init:
+    post:
+      tags:
+        - payments
+      summary: "Инициализация нового платежа"
+      description: "Инициализация нового платежа"
+      operationId: "createPaymentInitializationTask"
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        description: "Параметры создания платежа"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentCreationParameters"
+      responses:
+        '202':
+          description: "Запрос на инициализацию платежа успешно принят"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentInitializationTask"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+  /v1/payments/initializations/{id}:
+    get:
+      tags:
+        - payments
+      summary: "Получение статуса инициализации платежа"
+      operationId: "getPaymentInitializationTask"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "Идентификатор задачи инициализации платежа"
+          schema:
+            $ref: "#/components/schemas/PaymentTaskId"
+      responses:
+        '200':
+          description: "Статус инициализации платежа успешно получен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentInitializationTask"
         '400':
           $ref: "#/components/responses/BadRequest"
         '404':
@@ -189,6 +320,48 @@ components:
       description: "Идентификатор QR-кода"
       example: "Lqj8a0"
       minLength: 6
+    PaymentCreationParameters:
+      type: object
+      properties:
+        qrCodeId:
+          $ref: "#/components/schemas/QRCodeId"
+      required:
+        - qrCodeId
+    PaymentInitializationTask:
+      type: object
+      description: >-
+        Инициализация асинхронной платежной задачи. Идентификатор платежа в системе 
+        интернет-эквайринга т-банка возвращается при статусе INITIALIZED
+      properties:
+        id:
+          $ref: "#/components/schemas/PaymentTaskId"
+        status:
+          type: string
+          enum:
+            - "INITIALIZED"
+            - "IN_PROGRESS"
+            - "FAILED"
+        acquiringPaymentId:
+          $ref: "#/components/schemas/AcquiringPaymentId"
+        createdAt:
+          type: string
+          format: date-time
+          description: "Дата и время создания платежа"
+          example: "2015-11-03T10:15:57.000Z"
+      required:
+        - id
+        - status
+        - createdAt
+    PaymentTaskId:
+      type: string
+      description: "Идентификатор задачи инициализации платежа"
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    AcquiringPaymentId:
+      type: string
+      description: "Идентификатор платежа в системе эквайера"
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
   responses:
     NotFound:
       description: "Ресурс не найден"
