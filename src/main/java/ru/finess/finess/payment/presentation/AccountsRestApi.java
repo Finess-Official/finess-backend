@@ -1,6 +1,7 @@
 package ru.finess.finess.payment.presentation;
 
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.ConversionService;
@@ -9,10 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.finess.finess.identity.domain.UserId;
 import ru.finess.finess.payment.application.AccountCreationUseCase;
-import ru.finess.finess.payment.domain.AccountBIK;
-import ru.finess.finess.payment.domain.AccountINN;
-import ru.finess.finess.payment.domain.AccountNumber;
-import ru.finess.finess.payment.domain.AccountOwnerName;
+import ru.finess.finess.payment.application.GettingAccountUseCase;
+import ru.finess.finess.payment.domain.*;
 import ru.finess.finess.payment.presentation.api.AccountsApi;
 import ru.finess.finess.payment.presentation.dto.AccountCreationParametersDto;
 import ru.finess.finess.payment.presentation.dto.AccountDto;
@@ -23,6 +22,7 @@ import ru.finess.finess.payment.presentation.dto.AccountDto;
 public class AccountsRestApi implements AccountsApi {
 
   private final AccountCreationUseCase creationUseCase;
+  private final GettingAccountUseCase gettingAccountUseCase;
   private final Supplier<Optional<UserId>> currentUserSupplier;
   private final ConversionService conversionService;
 
@@ -44,8 +44,22 @@ public class AccountsRestApi implements AccountsApi {
         new AccountCreationUseCase.Parameters(currentUser, accountNumber, bik, inn, name);
     return creationUseCase
         .execute(parameters)
-        .map(account -> conversionService.convert(account, AccountDto.class))
+        .map(this::toDto)
         .map(ResponseEntity::ok)
         .recoverError(e -> ResponseEntity.badRequest().build());
+  }
+
+  @Override
+  public ResponseEntity<AccountDto> getAccount(UUID id) {
+    AccountId accountId = new AccountId(id);
+    return gettingAccountUseCase
+        .execute(accountId)
+        .map(this::toDto)
+        .map(ResponseEntity::ok)
+        .recoverError(e -> ResponseEntity.notFound().build());
+  }
+
+  private AccountDto toDto(Account account) {
+    return conversionService.convert(account, AccountDto.class);
   }
 }
