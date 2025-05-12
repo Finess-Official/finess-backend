@@ -23,7 +23,7 @@ public class PaymentInitialization {
   private PaymentInitializationStatus status;
 
   @Column(name = "acquiring_payment_url", unique = true)
-  private URI acquiringPaymentUrl;
+  private String acquiringPaymentUrl;
 
   @AttributeOverride(
       name = "value",
@@ -90,7 +90,7 @@ public class PaymentInitialization {
   public void complete(@NonNull URI acquiringPaymentUrl) {
     if (status == PaymentInitializationStatus.IN_PROGRESS) {
       status = PaymentInitializationStatus.INITIALIZED;
-      this.acquiringPaymentUrl = acquiringPaymentUrl;
+      this.acquiringPaymentUrl = acquiringPaymentUrl.toString();
       updatedAt = OffsetDateTime.now();
     } else {
       throw new IllegalStateException(

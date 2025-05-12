@@ -1,5 +1,6 @@
 package ru.finess.finess.payment.presentation.converter;
 
+import java.net.URI;
 import lombok.NonNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,8 @@ public class PaymentInitializationToPaymentInitializationTaskDto
     return new PaymentInitializationTaskDto()
         .id(source.id().value())
         .status(convert(source.status()))
-        .acquiringPaymentUrl(source.acquiringPaymentUrl())
+        .acquiringPaymentUrl(
+            source.acquiringPaymentUrl() == null ? null : URI.create(source.acquiringPaymentUrl()))
         .createdAt(source.createdAt());
   }
 
