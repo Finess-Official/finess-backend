@@ -5,6 +5,7 @@ import static ru.finess.finess.payment.application.InitializePaymentUseCase.*;
 import com.github.sviperll.result4j.Result;
 import java.time.OffsetDateTime;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.ConversionService;
@@ -13,8 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.finess.finess.identity.domain.UserId;
+import ru.finess.finess.payment.application.GettingPaymentInitializationUseCase;
 import ru.finess.finess.payment.application.InitializePaymentUseCase;
 import ru.finess.finess.payment.domain.PaymentInitialization;
+import ru.finess.finess.payment.domain.PaymentInitializationId;
 import ru.finess.finess.payment.domain.PaymentQrCodeId;
 import ru.finess.finess.payment.presentation.api.PaymentsApi;
 import ru.finess.finess.payment.presentation.dto.PaymentCreationParametersDto;
@@ -27,6 +30,7 @@ public class PaymentsRestApi implements PaymentsApi {
 
   private final Supplier<Optional<UserId>> currentUserSupplier;
   private final InitializePaymentUseCase initializePaymentUseCase;
+  private final GettingPaymentInitializationUseCase gettingPaymentInitializationUseCase;
   private final ConversionService conversionService;
 
   @Override
@@ -41,6 +45,24 @@ public class PaymentsRestApi implements PaymentsApi {
         .map(this::toDto)
         .map(ResponseEntity::ok)
         .recoverError(error -> ResponseEntity.status(error).build());
+  }
+
+  @Override
+  public ResponseEntity<PaymentInitializationTaskDto> getPaymentInitializationTask(UUID id) {
+    UserId currentUser =
+        currentUserSupplier
+            .get()
+            .orElseThrow(() -> new SecurityException("Current user is not authenticated"));
+
+    GettingPaymentInitializationUseCase.Parameters parameters =
+        new GettingPaymentInitializationUseCase.Parameters(
+            currentUser, new PaymentInitializationId(id));
+
+    return gettingPaymentInitializationUseCase
+        .execute(parameters)
+        .map(this::toDto)
+        .map(ResponseEntity::ok)
+        .recoverError(error -> ResponseEntity.notFound().build());
   }
 
   private Result<PaymentInitialization, HttpStatus> initializePayment(
