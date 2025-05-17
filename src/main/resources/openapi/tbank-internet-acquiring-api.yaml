@@ -3322,6 +3322,25 @@ paths:
                   Status:
                     description: |
                       Статус платежа. Подробнее — в разделе [Статусная модель платежа](#tag/Scenarii-oplaty-po-karte/Statusnaya-model-platezha).
+                    enum:
+                      - NEW
+                      - FORM_SHOWED
+                      - AUTHORIZING
+                      - 3DS_CHECKING
+                      - 3DS_CHECKED
+                      - AUTHORIZED
+                      - CONFIRMING
+                      - CONFIRMED
+                      - REVERSING
+                      - PARTIAL_REVERSED
+                      - REVERSED
+                      - REFUNDING
+                      - PARTIAL_REFUNDED
+                      - REFUNDED
+                      - CANCELED
+                      - DEADLINE_EXPIRED
+                      - REJECTED
+                      - AUTH_FAIL
                     type: string
                     maxLength: 20
                   PaymentId:

@@ -9,12 +9,13 @@ import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.finess.finess.common.utils.StringUtils;
+import ru.finess.finess.tbank.infrastructure.dto.GetStateFULLDto;
 import ru.finess.finess.tbank.infrastructure.dto.InitFULLDto;
 
 @Component
 public class TBankRequestTokenBuilder {
 
-  private static final Map<String, Function<InitFULLDto, String>> TOKEN_ATTRIBUTES_FROM_DTO =
+  private static final Map<String, Function<InitFULLDto, String>> TOKEN_ATTRIBUTES_FROM_INIT_DTO =
       Map.ofEntries(
           Map.entry("TerminalKey", InitFULLDto::getTerminalKey),
           Map.entry("Amount", dto -> String.valueOf(dto.getAmount())),
@@ -30,6 +31,13 @@ public class TBankRequestTokenBuilder {
           Map.entry("RedirectDueDate", dto -> StringUtils.toStringOrNull(dto.getRedirectDueDate())),
           Map.entry("Descriptor", InitFULLDto::getDescriptor));
 
+  private static final Map<String, Function<GetStateFULLDto, String>>
+      TOKEN_ATTRIBUTES_FROM_GET_STATE_DTO =
+          Map.ofEntries(
+              Map.entry("TerminalKey", GetStateFULLDto::getTerminalKey),
+              Map.entry("PaymentId", GetStateFULLDto::getPaymentId),
+              Map.entry("IP", GetStateFULLDto::getIP));
+
   private final Map.Entry<String, String> terminalPassword;
 
   TBankRequestTokenBuilder(
@@ -39,16 +47,28 @@ public class TBankRequestTokenBuilder {
 
   public String buildToken(@NonNull InitFULLDto dto) {
     Stream<Map.Entry<String, String>> tokenAttributesStream =
-        TOKEN_ATTRIBUTES_FROM_DTO.entrySet().stream()
+        TOKEN_ATTRIBUTES_FROM_INIT_DTO.entrySet().stream()
             .filter(entry -> Objects.nonNull(entry.getValue().apply(dto)))
             .map(entry -> Map.entry(entry.getKey(), entry.getValue().apply(dto)));
 
-    String joinedValues =
-        Stream.concat(tokenAttributesStream, Stream.of(terminalPassword))
-            .sorted(Map.Entry.comparingByKey())
-            .map(Map.Entry::getValue)
-            .collect(Collectors.joining());
-
+    String joinedValues = joinTokenAttributes(tokenAttributesStream);
     return StringUtils.sha256Digest(joinedValues);
+  }
+
+  public String buildToken(@NonNull GetStateFULLDto dto) {
+    Stream<Map.Entry<String, String>> tokenAttributesStream =
+        TOKEN_ATTRIBUTES_FROM_GET_STATE_DTO.entrySet().stream()
+            .filter(entry -> Objects.nonNull(entry.getValue().apply(dto)))
+            .map(entry -> Map.entry(entry.getKey(), entry.getValue().apply(dto)));
+
+    String joinedValues = joinTokenAttributes(tokenAttributesStream);
+    return StringUtils.sha256Digest(joinedValues);
+  }
+
+  private String joinTokenAttributes(Stream<Map.Entry<String, String>> tokenAttributesStream) {
+    return Stream.concat(tokenAttributesStream, Stream.of(terminalPassword))
+        .sorted(Map.Entry.comparingByKey())
+        .map(Map.Entry::getValue)
+        .collect(Collectors.joining());
   }
 }

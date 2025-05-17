@@ -1,20 +1,32 @@
 package ru.finess.finess.payment.domain;
 
-import jakarta.persistence.*;
-import java.net.URI;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
+import org.springframework.data.domain.AbstractAggregateRoot;
 import ru.finess.finess.identity.domain.UserId;
+import ru.finess.finess.payment.domain.event.PaymentInitializedEvent;
 
 @Getter
 @Entity
 @Table(name = "payment_initializations")
 @Accessors(fluent = true)
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class PaymentInitialization {
+public class PaymentInitialization extends AbstractAggregateRoot<PaymentInitialization> {
 
   @EqualsAndHashCode.Include @EmbeddedId private PaymentInitializationId id;
 
@@ -24,6 +36,9 @@ public class PaymentInitialization {
 
   @Column(name = "acquiring_payment_url", unique = true)
   private String acquiringPaymentUrl;
+
+  @AttributeOverride(name = "value", column = @Column(name = "acquiring_payment_id", unique = true))
+  private AcquiringPaymentId acquiringPaymentId;
 
   @AttributeOverride(
       name = "value",
@@ -52,6 +67,7 @@ public class PaymentInitialization {
         PaymentInitializationId.random(),
         PaymentInitializationStatus.NEW,
         null,
+        null,
         initiator,
         qrCodeId,
         createdAt,
@@ -59,8 +75,8 @@ public class PaymentInitialization {
         0);
   }
 
-  public void process() {
-    if (canProcess()) {
+  public void process(int retryLimit) {
+    if (canProcess(retryLimit)) {
       status = PaymentInitializationStatus.IN_PROGRESS;
       updatedAt = OffsetDateTime.now();
     } else {
@@ -70,9 +86,9 @@ public class PaymentInitialization {
     }
   }
 
-  public boolean canProcess() {
+  public boolean canProcess(int retryLimit) {
     return status == PaymentInitializationStatus.NEW
-        || status == PaymentInitializationStatus.FAILED;
+        || (status == PaymentInitializationStatus.FAILED && retryLimit < retryCount);
   }
 
   public void fail() {
@@ -87,11 +103,14 @@ public class PaymentInitialization {
     }
   }
 
-  public void complete(@NonNull URI acquiringPaymentUrl) {
+  public void complete(@NonNull AcquiringPayment acquiringPayment) {
     if (status == PaymentInitializationStatus.IN_PROGRESS) {
-      status = PaymentInitializationStatus.INITIALIZED;
-      this.acquiringPaymentUrl = acquiringPaymentUrl.toString();
-      updatedAt = OffsetDateTime.now();
+      this.status = PaymentInitializationStatus.INITIALIZED;
+      this.acquiringPaymentUrl = acquiringPayment.paymentLink().toString();
+      this.acquiringPaymentId = acquiringPayment.id();
+      this.updatedAt = OffsetDateTime.now();
+
+      registerEvent(new PaymentInitializedEvent(id));
     } else {
       throw new IllegalStateException(
           "Could not complete initialization %s not in IN_PROGRESS state. Actual: %s"
