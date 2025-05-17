@@ -1,7 +1,9 @@
 package ru.finess.finess.payment.application;
 
-import java.net.URI;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -13,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import ru.finess.finess.payment.domain.AcquiringPayment;
 import ru.finess.finess.payment.domain.PaymentInitialization;
 import ru.finess.finess.payment.domain.PaymentQrCode;
 import ru.finess.finess.payment.domain.PaymentQrCodeId;
@@ -61,7 +64,7 @@ public class PaymentInitializationService {
 
   private List<PaymentInitialization> findUnprocessedInitializations() {
     return initializationRepository.findAllUnprocessed(batchSize, retryLimit).stream()
-        .filter(PaymentInitialization::canProcess)
+        .filter(initialization -> initialization.canProcess(retryLimit))
         .toList();
   }
 
@@ -79,7 +82,7 @@ public class PaymentInitializationService {
   @SneakyThrows
   private CompletableFuture<Void> initializePayment(
       PaymentInitialization paymentInitialization, Map<PaymentQrCodeId, PaymentQrCode> qrCodes) {
-    paymentInitialization.process();
+    paymentInitialization.process(retryLimit);
 
     PaymentQrCode qrCode = qrCodes.get(paymentInitialization.qrCodeId());
     if (Objects.isNull(qrCode)) {
@@ -92,11 +95,18 @@ public class PaymentInitializationService {
       return CompletableFuture.failedFuture(new RuntimeException("QR code not found"));
     }
 
-    CompletableFuture<URI> uriCompletableFuture =
+    CompletableFuture<AcquiringPayment> uriCompletableFuture =
         internetAcquiringService.initializePayment(qrCode.amount(), paymentInitialization.id());
 
     return uriCompletableFuture
-        .thenAccept(paymentInitialization::complete)
+        .thenAccept(
+            acquiringPayment -> {
+              paymentInitialization.complete(acquiringPayment);
+
+              // TODO: replace with ddd-like event dispatcher so that explicit domain events are not
+              // processed through Spring
+              initializationRepository.save(paymentInitialization);
+            })
         .exceptionally(
             throwable -> {
               log.error(

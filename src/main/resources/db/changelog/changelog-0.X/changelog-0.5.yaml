@@ -1,0 +1,71 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: dnkutuzov
+      changes:
+        - addColumn:
+            tableName: payment_initializations
+            columns:
+              - column:
+                  name: acquiring_payment_id
+                  type: varchar(255)
+        - createSequence:
+            sequenceName: payment_number_sq
+            startValue: 1
+        - createTable:
+            tableName: payments
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: sequence_number
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: status
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: created_at
+                  type: timestamp
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_payments
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: amount
+                  type: DECIMAL
+              - column:
+                  constraints:
+                    nullable: false
+                  name: initiator_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: recipient_account_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: acquiring_payment_id
+                  type: VARCHAR(255)
+        - addUniqueConstraint:
+            columnNames: acquiring_payment_id
+            constraintName: uc_payments_acquiring_payment
+            tableName: payments
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_payments_id
+            tableName: payments
+        - addUniqueConstraint:
+            columnNames: sequence_number
+            constraintName: uc_payments_sequence_number
+            tableName: payments
