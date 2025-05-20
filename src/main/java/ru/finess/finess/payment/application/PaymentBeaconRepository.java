@@ -14,4 +14,6 @@ public interface PaymentBeaconRepository {
   void save(@NonNull PaymentBeacon beacon);
 
   Optional<PaymentBeacon> findByMajorMinorForUser(int major, int minor, UserId userId);
+
+  Optional<PaymentBeacon> findByMajorMinor(int major, int minor);
 }
