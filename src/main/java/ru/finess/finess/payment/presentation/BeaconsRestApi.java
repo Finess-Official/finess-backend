@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.finess.finess.identity.domain.UserId;
 import ru.finess.finess.payment.application.AccountCreationUseCase;
+import ru.finess.finess.payment.application.DeactivatingPaymentBeaconUseCase;
 import ru.finess.finess.payment.application.PaymentBeaconCreationUseCase;
 import ru.finess.finess.payment.domain.Account;
 import ru.finess.finess.payment.domain.AccountBIK;
@@ -35,14 +36,12 @@ public class BeaconsRestApi implements BeaconsApi {
   private final ConversionService conversionService;
   private final AccountCreationUseCase accountCreationUseCase;
   private final PaymentBeaconCreationUseCase beaconCreationUseCase;
+  private final DeactivatingPaymentBeaconUseCase deactivatingPaymentBeaconUseCase;
   private final Supplier<Optional<UserId>> currentUserSupplier;
 
   @Override
   public ResponseEntity<BeaconInfoDto> createBeacon(BeaconCreationRequestDto parameters) {
-    UserId currentUser =
-        currentUserSupplier
-            .get()
-            .orElseThrow(() -> new SecurityException("Current user is not authenticated"));
+    UserId currentUser = getCurrentUser();
     PaymentAmount amount = new PaymentAmount(BigDecimal.valueOf(parameters.getAmount()));
 
     return createAccount(parameters, currentUser)
@@ -54,7 +53,11 @@ public class BeaconsRestApi implements BeaconsApi {
 
   @Override
   public ResponseEntity<Void> deactivateBeacon(Integer major, Integer minor) {
-    return BeaconsApi.super.deactivateBeacon(major, minor);
+    DeactivatingPaymentBeaconUseCase.Parameters parameters = new DeactivatingPaymentBeaconUseCase.Parameters(major, minor, getCurrentUser());
+    return deactivatingPaymentBeaconUseCase
+        .execute(parameters)
+        .map(t -> ResponseEntity.noContent().<Void>build())
+        .recoverError(notFound -> ResponseEntity.notFound().build());
   }
 
   @Override
@@ -65,6 +68,12 @@ public class BeaconsRestApi implements BeaconsApi {
   @Override
   public ResponseEntity<BeaconConfigurationDto> getBeaconConfiguration() {
     return BeaconsApi.super.getBeaconConfiguration();
+  }
+
+  private UserId getCurrentUser() {
+    return currentUserSupplier
+        .get()
+        .orElseThrow(() -> new SecurityException("Current user is not authenticated"));
   }
 
   private Result<Account, HttpStatus> createAccount(
