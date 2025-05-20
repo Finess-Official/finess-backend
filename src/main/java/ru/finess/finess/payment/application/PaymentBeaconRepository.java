@@ -1,12 +1,11 @@
 package ru.finess.finess.payment.application;
 
+import java.util.Map;
+import java.util.Optional;
 import lombok.NonNull;
 import ru.finess.finess.identity.domain.UserId;
 import ru.finess.finess.payment.domain.PaymentBeacon;
 import ru.finess.finess.payment.domain.PaymentBeaconId;
-
-import java.util.Map;
-import java.util.Optional;
 
 public interface PaymentBeaconRepository {
 

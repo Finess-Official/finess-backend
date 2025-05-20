@@ -46,11 +46,7 @@ public class PaymentBeaconCreationUseCase
       Map.Entry<Integer, Integer> settings = beaconRepository.generateSettings();
       PaymentBeacon beacon =
           PaymentBeacon.ofActive(
-              accountId,
-              parameters.amount(),
-              bluetoothId,
-              settings.getKey(),
-              settings.getValue());
+              accountId, parameters.amount(), bluetoothId, settings.getKey(), settings.getValue());
       beaconRepository.save(beacon);
       return Result.success(beacon);
     } else {

@@ -36,7 +36,8 @@ public interface JpaPaymentBeaconRepository extends JpaRepository<PaymentBeacon,
     and pb.minor = :minor
       and pb.isActive = true
   """)
-  Optional<PaymentBeacon> findActiveByMajorMinor(@Param("major") int major, @Param("minor") int minor);
+  Optional<PaymentBeacon> findActiveByMajorMinor(
+      @Param("major") int major, @Param("minor") int minor);
 
   @Query(
       """

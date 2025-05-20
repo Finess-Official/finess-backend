@@ -9,7 +9,11 @@ import ru.finess.finess.payment.domain.PaymentBeacon;
 
 @Service
 @RequiredArgsConstructor
-public class GettingPaymentBeaconUseCase implements UseCase<PaymentBeacon, GettingPaymentBeaconUseCase.NotFound, GettingPaymentBeaconUseCase.Parameters> {
+public class GettingPaymentBeaconUseCase
+    implements UseCase<
+        PaymentBeacon,
+        GettingPaymentBeaconUseCase.NotFound,
+        GettingPaymentBeaconUseCase.Parameters> {
 
   public record NotFound(int major, int minor) {}
 
@@ -21,9 +25,9 @@ public class GettingPaymentBeaconUseCase implements UseCase<PaymentBeacon, Getti
   public Result<PaymentBeacon, NotFound> execute(@NonNull Parameters parameters) {
     int major = parameters.major;
     int minor = parameters.minor;
-    return paymentBeaconRepository.findActiveByMajorMinor(major, minor)
+    return paymentBeaconRepository
+        .findActiveByMajorMinor(major, minor)
         .map(Result::<PaymentBeacon, NotFound>success)
         .orElseGet(() -> Result.error(new NotFound(major, minor)));
   }
-
 }
