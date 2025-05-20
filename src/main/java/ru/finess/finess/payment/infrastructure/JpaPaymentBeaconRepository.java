@@ -28,4 +28,12 @@ public interface JpaPaymentBeaconRepository extends JpaRepository<PaymentBeacon,
   """)
   Optional<PaymentBeacon> findByMajorMinorForUser(
       @Param("major") int major, @Param("minor") int minor, @Param("user") UserId userId);
+
+  @Query(
+      """
+    select pb from PaymentBeacon pb
+    where pb.major = :major
+    and pb.minor = :minor
+  """)
+  Optional<PaymentBeacon> findByMajorMinor(@Param("major") int major, @Param("minor") int minor);
 }
