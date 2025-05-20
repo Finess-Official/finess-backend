@@ -21,7 +21,7 @@ public class GettingPaymentBeaconUseCase implements UseCase<PaymentBeacon, Getti
   public Result<PaymentBeacon, NotFound> execute(@NonNull Parameters parameters) {
     int major = parameters.major;
     int minor = parameters.minor;
-    return paymentBeaconRepository.findByMajorMinor(major, minor)
+    return paymentBeaconRepository.findActiveByMajorMinor(major, minor)
         .map(Result::<PaymentBeacon, NotFound>success)
         .orElseGet(() -> Result.error(new NotFound(major, minor)));
   }

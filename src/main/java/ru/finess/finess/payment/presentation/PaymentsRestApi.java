@@ -15,11 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.finess.finess.identity.domain.UserId;
+import ru.finess.finess.payment.application.GettingPaymentBeaconByIdUseCase;
 import ru.finess.finess.payment.application.GettingPaymentInitializationUseCase;
 import ru.finess.finess.payment.application.GettingQrCodeByIdUseCase;
 import ru.finess.finess.payment.application.InitializePaymentUseCase;
 import ru.finess.finess.payment.domain.AccountId;
 import ru.finess.finess.payment.domain.PaymentAmount;
+import ru.finess.finess.payment.domain.PaymentBeacon;
+import ru.finess.finess.payment.domain.PaymentBeaconId;
 import ru.finess.finess.payment.domain.PaymentInitialization;
 import ru.finess.finess.payment.domain.PaymentInitializationId;
 import ru.finess.finess.payment.domain.PaymentQrCode;
@@ -40,6 +43,7 @@ public class PaymentsRestApi implements PaymentsApi {
   private final InitializePaymentUseCase initializePaymentUseCase;
   private final GettingPaymentInitializationUseCase gettingPaymentInitializationUseCase;
   private final GettingQrCodeByIdUseCase gettingQrCodeByIdUseCase;
+  private final GettingPaymentBeaconByIdUseCase gettingBeaconByIdUseCase;
   private final ConversionService conversionService;
 
   @Override
@@ -53,8 +57,8 @@ public class PaymentsRestApi implements PaymentsApi {
     AssociationIdDto associationId = parameters.getAssociationId();
     Result<Map.Entry<AccountId, PaymentAmount>, HttpStatus> paymentInfoResult =
         switch (associationId) {
-          case BeaconAssociationIdDto ignored ->
-              throw new UnsupportedOperationException("Not supported yet");
+          case BeaconAssociationIdDto dto ->
+              findBeaconById(dto).map(beacon -> Map.entry(beacon.accountId(), beacon.amount()));
           case QrCodeAssociationIdDto dto ->
               findQrCodeId(dto.getQrCodeId())
                   .map(qrCode -> Map.entry(qrCode.accountId(), qrCode.amount()));
@@ -84,6 +88,12 @@ public class PaymentsRestApi implements PaymentsApi {
         .map(this::toDto)
         .map(ResponseEntity::ok)
         .recoverError(error -> ResponseEntity.notFound().build());
+  }
+
+  private Result<PaymentBeacon, HttpStatus> findBeaconById(BeaconAssociationIdDto dto) {
+    return gettingBeaconByIdUseCase
+        .execute(new PaymentBeaconId(dto.getBeaconId()))
+        .mapError(notFound -> HttpStatus.NOT_FOUND);
   }
 
   private Result<PaymentQrCode, HttpStatus> findQrCodeId(String qrCodeId) {
