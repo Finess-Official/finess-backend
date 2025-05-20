@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: dnkutuzov
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: major
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: minor
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_payment_beacons
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: account_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: amount
+                  type: DECIMAL
+              - column:
+                  constraints:
+                    nullable: false
+                  name: bluetooth_id
+                  type: VARCHAR
+            tableName: payment_beacons
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_payment_beacons_id
+            tableName: payment_beacons
+        - createSequence:
+            sequenceName: payment_beacon_sq
+            startValue: 1
+

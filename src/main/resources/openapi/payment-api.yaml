@@ -538,10 +538,13 @@ components:
     BeaconCreationRequest:
       type: object
       properties:
+        amount:
+          $ref: "#/components/schemas/QRCodeAmount"
         account:
           $ref: "#/components/schemas/AccountCreationParameters"
       required:
         - account
+        - amount
     BeaconInfo:
       type: object
       properties:
@@ -573,14 +576,14 @@ components:
       example: "39ED98FF-2900-441A-802F-9C398FC199D2"
     BeaconMajor:
       type: integer
-      format: int16
+      format: uint16
       minimum: 0
       maximum: 65535
       description: "Major параметр маяка"
       example: 1
     BeaconMinor:
       type: integer
-      format: int16
+      format: uint16
       minimum: 0
       maximum: 65535
       description: "Minor параметр маяка"
