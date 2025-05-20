@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import ru.finess.finess.common.application.UseCase;
 import ru.finess.finess.identity.application.UserRepository;
 import ru.finess.finess.identity.domain.UserId;
+import ru.finess.finess.payment.domain.AccountId;
+import ru.finess.finess.payment.domain.PaymentAmount;
 import ru.finess.finess.payment.domain.PaymentInitialization;
 import ru.finess.finess.payment.domain.PaymentQrCodeId;
 
@@ -20,24 +22,27 @@ public class InitializePaymentUseCase
         InitializePaymentUseCase.Parameters> {
 
   private final UserRepository userRepository;
-  private final PaymentQrCodeRepository qrCodeRepository;
+  private final AccountRepository accountRepository;
   private final PaymentInitializationService initializationService;
 
-  public sealed interface Errors permits Errors.UserNotFound, Errors.QrCodeNotFound {
+  public sealed interface Errors permits Errors.UserNotFound, Errors.AccountNotFound {
 
     record UserNotFound(UserId userId) implements Errors {}
 
-    record QrCodeNotFound(PaymentQrCodeId qrCodeId) implements Errors {}
+    record AccountNotFound(PaymentQrCodeId qrCodeId) implements Errors {}
   }
 
   public record Parameters(
-      @NonNull UserId userId, @NonNull PaymentQrCodeId qrCodeId, @NonNull OffsetDateTime now) {}
+      @NonNull UserId userId,
+      @NonNull AccountId accountId,
+      @NonNull PaymentAmount amount,
+      @NonNull OffsetDateTime now) {}
 
   @Override
   public Result<PaymentInitialization, Errors> execute(@NonNull Parameters parameters) {
-    PaymentQrCodeId qrCodeId = parameters.qrCodeId();
-    if (!qrCodeRepository.existsById(qrCodeId)) {
-      return Result.error(new Errors.QrCodeNotFound(qrCodeId));
+    AccountId accountId = parameters.accountId();
+    if (!accountRepository.existsById(accountId)) {
+      return Result.error(new Errors.UserNotFound(parameters.userId()));
     }
 
     UserId userId = parameters.userId();
@@ -46,7 +51,7 @@ public class InitializePaymentUseCase
     }
 
     PaymentInitialization initialization =
-        PaymentInitialization.of(parameters.now(), userId, qrCodeId);
+        PaymentInitialization.of(parameters.now(), userId, accountId, parameters.amount());
     initializationService.enqueue(initialization);
     return Result.success(initialization);
   }

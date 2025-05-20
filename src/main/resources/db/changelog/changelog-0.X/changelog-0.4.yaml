@@ -44,7 +44,12 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: qr_code_id
-                  type: varchar(255)
+                  name: account_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: decimal
                   constraints:
                     nullable: false

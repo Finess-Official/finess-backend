@@ -13,4 +13,6 @@ public interface AccountRepository {
   void save(@NonNull Account account);
 
   Optional<Account> findById(@NonNull AccountId id);
+
+  boolean existsById(@NonNull AccountId accountId);
 }

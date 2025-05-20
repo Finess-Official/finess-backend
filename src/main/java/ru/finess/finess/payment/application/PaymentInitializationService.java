@@ -1,12 +1,7 @@
 package ru.finess.finess.payment.application;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +12,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.finess.finess.payment.domain.AcquiringPayment;
 import ru.finess.finess.payment.domain.PaymentInitialization;
-import ru.finess.finess.payment.domain.PaymentQrCode;
-import ru.finess.finess.payment.domain.PaymentQrCodeId;
 
 @Slf4j
 @Service
@@ -27,19 +20,16 @@ public class PaymentInitializationService {
   private final int batchSize;
   private final int retryLimit;
   private final PaymentInitializationRepository initializationRepository;
-  private final PaymentQrCodeRepository paymentQrCodeRepository;
   private final InternetAcquiringService internetAcquiringService;
 
   public PaymentInitializationService(
       PaymentInitializationRepository initializationRepository,
       @Value("${finess.payment.initialization.batchSize}") int batchSize,
       @Value("${finess.payment.initialization.retryLimit}") int retryLimit,
-      PaymentQrCodeRepository paymentQrCodeRepository,
       InternetAcquiringService internetAcquiringService) {
     this.batchSize = batchSize;
     this.retryLimit = retryLimit;
     this.initializationRepository = initializationRepository;
-    this.paymentQrCodeRepository = paymentQrCodeRepository;
     this.internetAcquiringService = internetAcquiringService;
   }
 
@@ -53,12 +43,9 @@ public class PaymentInitializationService {
   @Scheduled(fixedDelayString = "${finess.payment.initialization.fixedDelay}")
   protected void processInitializations() {
     List<PaymentInitialization> unprocessedInitializations = findUnprocessedInitializations();
-    Map<PaymentQrCodeId, PaymentQrCode> qrCodes = findAllQrCodes(unprocessedInitializations);
 
     List<CompletableFuture<Void>> futures =
-        unprocessedInitializations.stream()
-            .map(paymentInitialization -> initializePayment(paymentInitialization, qrCodes))
-            .toList();
+        unprocessedInitializations.stream().map(this::initializePayment).toList();
     CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
   }
 
@@ -68,35 +55,13 @@ public class PaymentInitializationService {
         .toList();
   }
 
-  private Map<PaymentQrCodeId, PaymentQrCode> findAllQrCodes(
-      List<PaymentInitialization> unprocessedInitializations) {
-    Set<PaymentQrCodeId> qrCodeIds =
-        unprocessedInitializations.stream()
-            .map(PaymentInitialization::qrCodeId)
-            .collect(Collectors.toSet());
-
-    return paymentQrCodeRepository.findAllById(qrCodeIds).stream()
-        .collect(Collectors.toMap(PaymentQrCode::id, Function.identity()));
-  }
-
   @SneakyThrows
-  private CompletableFuture<Void> initializePayment(
-      PaymentInitialization paymentInitialization, Map<PaymentQrCodeId, PaymentQrCode> qrCodes) {
+  private CompletableFuture<Void> initializePayment(PaymentInitialization paymentInitialization) {
     paymentInitialization.process(retryLimit);
 
-    PaymentQrCode qrCode = qrCodes.get(paymentInitialization.qrCodeId());
-    if (Objects.isNull(qrCode)) {
-      log.error(
-          "QR code {} not found for payment initialization: {}",
-          paymentInitialization.qrCodeId(),
-          paymentInitialization.id());
-
-      paymentInitialization.fail();
-      return CompletableFuture.failedFuture(new RuntimeException("QR code not found"));
-    }
-
     CompletableFuture<AcquiringPayment> uriCompletableFuture =
-        internetAcquiringService.initializePayment(qrCode.amount(), paymentInitialization.id());
+        internetAcquiringService.initializePayment(
+            paymentInitialization.amount(), paymentInitialization.id());
 
     return uriCompletableFuture
         .thenAccept(
