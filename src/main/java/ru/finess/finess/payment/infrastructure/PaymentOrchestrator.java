@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import ru.finess.finess.payment.domain.*;
+import ru.finess.finess.payment.domain.Payment;
+import ru.finess.finess.payment.domain.PaymentInitialization;
+import ru.finess.finess.payment.domain.PaymentInitializationId;
 import ru.finess.finess.payment.domain.event.PaymentInitializedEvent;
 
 @Component
@@ -13,7 +15,6 @@ public class PaymentOrchestrator {
 
   private final JpaPaymentInitializationTaskRepository initializationRepository;
   private final JpaPaymentRepository paymentRepository;
-  private final JpaPaymentQrCodeRepository qrCodeRepository;
 
   @TransactionalEventListener(
       classes = PaymentInitializedEvent.class,
@@ -21,15 +22,14 @@ public class PaymentOrchestrator {
       phase = TransactionPhase.BEFORE_COMMIT)
   public void onPaymentInitialized(PaymentInitializedEvent event) {
     PaymentInitialization paymentInitialization = getInitialization(event);
-    PaymentQrCode qrCode = getQrCode(paymentInitialization);
 
     Payment payment =
         Payment.initialized(
             paymentRepository.nextSequenceNumber(),
             paymentInitialization.createdAt(),
-            qrCode.amount(),
+            paymentInitialization.amount(),
             paymentInitialization.initiator(),
-            qrCode.accountId(),
+            paymentInitialization.accountId(),
             paymentInitialization.acquiringPaymentId());
     paymentRepository.save(payment);
   }
@@ -42,12 +42,5 @@ public class PaymentOrchestrator {
             () ->
                 new IllegalStateException(
                     "PaymentInitialization not found: " + paymentInitializationId));
-  }
-
-  private PaymentQrCode getQrCode(PaymentInitialization paymentInitialization) {
-    PaymentQrCodeId qrCodeId = paymentInitialization.qrCodeId();
-    return qrCodeRepository
-        .findById(qrCodeId)
-        .orElseThrow(() -> new IllegalStateException("PaymentQrCode not found: " + qrCodeId));
   }
 }

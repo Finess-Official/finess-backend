@@ -31,6 +31,8 @@ tags:
     description: Управление QR-кодами
   - name: payments
     description: Работа с платежами
+  - name: beacons
+    description: Управление bluetooth маяками и их привязка к платежным данным
 paths:
   /v1/accounts:
     post:
@@ -225,6 +227,133 @@ paths:
           $ref: "#/components/responses/InternalServerError"
         '503':
           $ref: "#/components/responses/ServiceUnavailable"
+  /v1/beacons:
+    post:
+      tags:
+        - beacons
+      summary: "Создание нового маяка"
+      description: "Создание маяка с автоматически сгенерированными major/minor параметрами и привязка к платежным данным пользователя"
+      operationId: "createBeacon"
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        description: "Платежные данные для привязки к маяку"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BeaconCreationRequest"
+      responses:
+        '201':
+          description: "Маяк успешно создан"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeaconInfo"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+    delete:
+      tags:
+        - beacons
+      summary: "Деактивация маяка"
+      description: "Деактивация маяка по major и minor параметрам"
+      operationId: "deactivateBeacon"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: major
+          in: query
+          required: true
+          description: "Major параметр маяка"
+          schema:
+            $ref: "#/components/schemas/BeaconMajor"
+        - name: minor
+          in: query
+          required: true
+          description: "Minor параметр маяка"
+          schema:
+            $ref: "#/components/schemas/BeaconMinor"
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+    get:
+      tags:
+        - beacons
+      summary: "Поиск платежной информации по параметрам маяка"
+      description: "Получение платежной информации по major и minor параметрам маяка"
+      operationId: "findBeaconPaymentInfo"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: major
+          in: query
+          required: true
+          description: "Major параметр маяка"
+          schema:
+            $ref: "#/components/schemas/BeaconMajor"
+        - name: minor
+          in: query
+          required: true
+          description: "Minor параметр маяка"
+          schema:
+            $ref: "#/components/schemas/BeaconMinor"
+      responses:
+        '200':
+          description: "Платежная информация успешно найдена"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeaconInfo"
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+  /v1/beacons/configuration:
+    get:
+      tags:
+        - beacons
+      summary: "Получение конфигурации для приемника"
+      description: "Получение UUID для поиска маяков через iBeacon протокол"
+      operationId: "getBeaconConfiguration"
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: "Конфигурация успешно получена"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeaconConfiguration"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
 components:
   schemas:
     AccountCreationParameters:
@@ -320,13 +449,57 @@ components:
       description: "Идентификатор QR-кода"
       example: "Lqj8a0"
       minLength: 6
+    AssociationId:
+      type: object
+      description: Айди ассоциации счета (например блютуз маяк или QrCode)
+      discriminator:
+        propertyName: type
+        mapping:
+          BEACON: "#/components/schemas/BeaconAssociationId"
+          QRCODE: "#/components/schemas/QrCodeAssociationId"
+      properties:
+        type:
+          type: string
+          description: Тип ассоциации
+          enum:
+            - "BEACON"
+            - "QRCODE"
+          example: "QRCODE"
+      required:
+        - type
+    BeaconAssociationId:
+      allOf:
+        - $ref: "#/components/schemas/AssociationId"
+        - type: object
+          description: Ассоциация счета с маяком
+          properties:
+            beaconId:
+              $ref: "#/components/schemas/BeaconId"
+          required:
+            - beaconId
+          example:
+            type: BEACON
+            beaconId: 550e8400-e29b-41d4-a716-446655440000
+    QrCodeAssociationId:
+      allOf:
+        - $ref: "#/components/schemas/AssociationId"
+        - type: object
+          description: Ассоциация счета с QR-кодом
+          properties:
+            qrCodeId:
+              $ref: "#/components/schemas/QRCodeId"
+          required:
+            - qrCodeId
+          example:
+            type: QRCODE
+            qrCodeId: 9EoEM3
     PaymentCreationParameters:
       type: object
       properties:
-        qrCodeId:
-          $ref: "#/components/schemas/QRCodeId"
+        associationId:
+          $ref: "#/components/schemas/AssociationId"
       required:
-        - qrCodeId
+        - associationId
     PaymentInitializationTask:
       type: object
       description: >-
@@ -362,6 +535,64 @@ components:
       description: "Ссылка на платежную форму"
       format: uri
       example: "https://securepay.tinkoff.ru/new/fU1ppgqa"
+    BeaconCreationRequest:
+      type: object
+      properties:
+        account:
+          $ref: "#/components/schemas/AccountCreationParameters"
+      required:
+        - account
+    BeaconInfo:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/BeaconId"
+        major:
+          $ref: "#/components/schemas/BeaconMajor"
+        minor:
+          $ref: "#/components/schemas/BeaconMinor"
+        bluetoothId:
+          $ref: "#/components/schemas/BeaconBluetoothId"
+        account:
+          $ref: "#/components/schemas/Account"
+      required:
+        - id
+        - major
+        - minor
+        - bluetoothId
+        - account
+    BeaconId:
+      type: string
+      description: "Идентификатор маяка"
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    BeaconBluetoothId:
+      type: string
+      description: "Конфигурация для поиска маяков"
+      format: uuid
+      example: "39ED98FF-2900-441A-802F-9C398FC199D2"
+    BeaconMajor:
+      type: integer
+      format: int16
+      minimum: 0
+      maximum: 65535
+      description: "Major параметр маяка"
+      example: 1
+    BeaconMinor:
+      type: integer
+      format: int16
+      minimum: 0
+      maximum: 65535
+      description: "Minor параметр маяка"
+      example: 1
+    BeaconConfiguration:
+      type: object
+      description: "Конфигурация для поиска маяков"
+      properties:
+        bluetoothId:
+          $ref: "#/components/schemas/BeaconBluetoothId"
+      required:
+        - bluetoothId
   responses:
     NotFound:
       description: "Ресурс не найден"
@@ -375,6 +606,8 @@ components:
       description: "Сервис временно недоступен - попробуйте позже"
     TooManyRequests:
       description: "Слишком много запросов - превышен лимит"
+    NoContent:
+      description: "Запрос успешно обработан, но нет данных для возврата"
   securitySchemes:
     bearerAuth:
       type: http

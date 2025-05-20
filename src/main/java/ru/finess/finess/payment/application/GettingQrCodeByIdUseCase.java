@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.finess.finess.common.application.UseCase;
-import ru.finess.finess.identity.domain.UserId;
 import ru.finess.finess.payment.domain.PaymentQrCode;
 import ru.finess.finess.payment.domain.PaymentQrCodeId;
 
@@ -19,9 +18,8 @@ public class GettingQrCodeByIdUseCase
         GettingQrCodeByIdUseCase.Parameters> {
 
   private final PaymentQrCodeRepository paymentQrCodeRepository;
-  private final AccountRepository accountRepository;
 
-  public record Parameters(@NonNull PaymentQrCodeId qrCodeId, @NonNull UserId userId) {}
+  public record Parameters(@NonNull PaymentQrCodeId qrCodeId) {}
 
   public record QrCodeNotFound(PaymentQrCodeId qrCodeId) {}
 

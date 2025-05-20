@@ -49,13 +49,9 @@ public class QrCodesRestApi implements QrcodesApi {
 
   @Override
   public ResponseEntity<QRCodeDto> getQRCode(String id) {
-    UserId currentUser =
-        currentUserSupplier
-            .get()
-            .orElseThrow(() -> new SecurityException("User is not authenticated"));
     PaymentQrCodeId paymentQrCodeId = new PaymentQrCodeId(id);
     GettingQrCodeByIdUseCase.Parameters parameters =
-        new GettingQrCodeByIdUseCase.Parameters(paymentQrCodeId, currentUser);
+        new GettingQrCodeByIdUseCase.Parameters(paymentQrCodeId);
 
     return gettingQrCodeByIdUseCase
         .execute(parameters)

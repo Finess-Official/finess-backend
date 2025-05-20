@@ -46,9 +46,14 @@ public class PaymentInitialization extends AbstractAggregateRoot<PaymentInitiali
   private UserId initiator;
 
   @AttributeOverride(
+      name = "id",
+      column = @Column(name = "account_id", nullable = false, updatable = false))
+  private AccountId accountId;
+
+  @AttributeOverride(
       name = "value",
-      column = @Column(name = "qr_code_id", nullable = false, updatable = false))
-  private PaymentQrCodeId qrCodeId;
+      column = @Column(name = "amount", nullable = false, updatable = false))
+  private PaymentAmount amount;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
@@ -62,14 +67,16 @@ public class PaymentInitialization extends AbstractAggregateRoot<PaymentInitiali
   public static PaymentInitialization of(
       @NonNull OffsetDateTime createdAt,
       @NonNull UserId initiator,
-      @NonNull PaymentQrCodeId qrCodeId) {
+      @NonNull AccountId accountId,
+      @NonNull PaymentAmount amount) {
     return new PaymentInitialization(
         PaymentInitializationId.random(),
         PaymentInitializationStatus.NEW,
         null,
         null,
         initiator,
-        qrCodeId,
+        accountId,
+        amount,
         createdAt,
         createdAt,
         0);
