@@ -45,7 +45,7 @@ public class PaymentBeaconCreationUseCase
     if (accountRepository.existsForUser(parameters.currentUser, accountId)) {
       Map.Entry<Integer, Integer> settings = beaconRepository.generateSettings();
       PaymentBeacon beacon =
-          PaymentBeacon.of(
+          PaymentBeacon.ofActive(
               accountId,
               parameters.amount(),
               bluetoothId,

@@ -37,6 +37,11 @@ databaseChangeLog:
                     nullable: false
                   name: bluetooth_id
                   type: VARCHAR
+              - column:
+                  name: is_active
+                  constraints:
+                    nullable: false
+                  type: boolean
             tableName: payment_beacons
         - addUniqueConstraint:
             columnNames: id

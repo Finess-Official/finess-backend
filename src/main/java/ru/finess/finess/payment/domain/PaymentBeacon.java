@@ -42,14 +42,22 @@ public class PaymentBeacon {
   @Column(name = "minor", nullable = false, updatable = false)
   private int minor;
 
-  public static PaymentBeacon of(
+  @Column(name = "is_active", nullable = false)
+  private boolean isActive;
+
+  public static PaymentBeacon ofActive(
       @NonNull AccountId accountId,
       @NonNull PaymentAmount amount,
       PaymentBeaconBluetoothId bluetoothId,
       int major,
       int minor
   ) {
-    return new PaymentBeacon(PaymentBeaconId.random(), accountId, amount, bluetoothId, major, minor);
+    return new PaymentBeacon(PaymentBeaconId.random(), accountId, amount, bluetoothId, major, minor, true);
   }
 
+  public void deactivate() {
+    if (this.isActive) {
+      this.isActive = false;
+    }
+  }
 }
