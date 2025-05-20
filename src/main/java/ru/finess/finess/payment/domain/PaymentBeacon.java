@@ -50,9 +50,9 @@ public class PaymentBeacon {
       @NonNull PaymentAmount amount,
       PaymentBeaconBluetoothId bluetoothId,
       int major,
-      int minor
-  ) {
-    return new PaymentBeacon(PaymentBeaconId.random(), accountId, amount, bluetoothId, major, minor, true);
+      int minor) {
+    return new PaymentBeacon(
+        PaymentBeaconId.random(), accountId, amount, bluetoothId, major, minor, true);
   }
 
   public void deactivate() {

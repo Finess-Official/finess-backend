@@ -1,11 +1,10 @@
 package ru.finess.finess.payment.infrastructure;
 
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Delegate;
 import org.springframework.stereotype.Component;
 import ru.finess.finess.payment.application.PaymentBeaconRepository;
-
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor

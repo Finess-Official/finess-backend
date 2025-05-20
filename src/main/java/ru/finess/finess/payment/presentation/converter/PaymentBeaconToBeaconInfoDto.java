@@ -1,5 +1,6 @@
 package ru.finess.finess.payment.presentation.converter;
 
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
@@ -7,8 +8,6 @@ import ru.finess.finess.payment.application.AccountRepository;
 import ru.finess.finess.payment.domain.Account;
 import ru.finess.finess.payment.domain.PaymentBeacon;
 import ru.finess.finess.payment.presentation.dto.BeaconInfoDto;
-
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -27,5 +26,4 @@ public class PaymentBeaconToBeaconInfoDto implements Converter<PaymentBeacon, Be
         .major(source.major())
         .minor(source.minor());
   }
-
 }
