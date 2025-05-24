@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.testcontainers.shaded.org.checkerframework.checker.nullness.qual.NonNull;
 import ru.finess.finess.identity.application.UserRegistrationUseCase;
 import ru.finess.finess.identity.domain.User;
+import ru.finess.finess.identity.domain.UserFullName;
 import ru.finess.finess.identity.domain.UserPassword;
 
 @Component
@@ -18,8 +19,9 @@ public class UserMother {
   }
 
   public User create(@NonNull UserPassword password) {
+    UserFullName fullName = new UserFullName("Ivan", "Ivanov", "Ivanovich");
     return userRegistrationUseCase
-        .execute(new UserRegistrationUseCase.Parameters(password))
+        .execute(new UserRegistrationUseCase.Parameters(password, fullName))
         .orOnErrorThrow(ignored -> new RuntimeException());
   }
 }

@@ -36,7 +36,10 @@ class SessionManagementRestApiIT {
     String requestBody =
         """
             {
-                "password": "Example1"
+                "password": "Example1",
+                "firstName": "Example",
+                "lastName": "Example",
+                "middleName": "Example"
             }
         """;
 

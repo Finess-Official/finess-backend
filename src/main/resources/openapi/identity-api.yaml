@@ -9,19 +9,19 @@ servers:
     variables:
       protocol:
         enum:
-          - "https"
           - "http"
-        default: "https"
+          - "https"
+        default: "http"
       port:
         enum:
-          - "443"
           - "8080"
-        default: "443"
+          - "443"
+        default: "8080"
       server:
         enum:
-          - "finesspay.ru"
           - "localhost"
-        default: "finesspay.ru"
+          - "finesspay.ru"
+        default: "locahost"
       basePath:
         default: "/api/identity"
 tags:
@@ -65,7 +65,7 @@ paths:
       summary: "Текущий пользователь"
       operationId: "getCurrentUser"
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       responses:
         '200':
           description: "Текущий пользователь"
@@ -148,8 +148,17 @@ components:
       properties:
         password:
           $ref: "#/components/schemas/UserPassword"
+        firstName:
+          $ref: "#/components/schemas/UserFirstName"
+        lastName:
+          $ref: "#/components/schemas/UserLastName"
+        middleName:
+          $ref: "#/components/schemas/UserMiddleName"
       required:
         - password
+        - firstName
+        - lastName
+        - middleName
     UserSigninParameters:
       type: object
       properties:
@@ -210,8 +219,29 @@ components:
       properties:
         id:
           $ref: "#/components/schemas/UserId"
+        firstName:
+          $ref: "#/components/schemas/UserFirstName"
+        lastName:
+          $ref: "#/components/schemas/UserLastName"
+        middleName:
+          $ref: "#/components/schemas/UserMiddleName"
       required:
         - id
+        - firstName
+        - lastName
+        - middleName
+    UserFirstName:
+      type: string
+      description: "Имя пользователя"
+      example: "Иван"
+    UserLastName:
+      type: string
+      description: "Фамилия пользователя"
+      example: "Иванов"
+    UserMiddleName:
+      type: string
+      description: "Отчество пользователя"
+      example: "Иванович"
     UserId:
       type: string
       format: uuid
