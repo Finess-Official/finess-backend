@@ -65,6 +65,31 @@ paths:
           $ref: "#/components/responses/InternalServerError"
         '503':
           $ref: "#/components/responses/ServiceUnavailable"
+    get:
+      tags:
+        - accounts
+      summary: "Получение списка счетов"
+      description: "Получение списка всех счетов пользователя"
+      operationId: "getAccounts"
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: "Список счетов успешно получен"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+        '401':
+          $ref: "#/components/responses/Unauthorized"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
   /v1/accounts/{id}:
     get:
       tags:
@@ -89,6 +114,35 @@ paths:
                 $ref: "#/components/schemas/Account"
         '400':
           $ref: "#/components/responses/BadRequest"
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+    delete:
+      tags:
+        - accounts
+      summary: "Удаление счета"
+      operationId: "deleteAccount"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "Идентификатор счета"
+          schema:
+            $ref: "#/components/schemas/AccountId"
+      responses:
+        '204':
+          $ref: "#/components/responses/NoContent"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '401':
+          $ref: "#/components/responses/Unauthorized"
         '404':
           $ref: "#/components/responses/NotFound"
         '429':
@@ -221,6 +275,72 @@ paths:
           $ref: "#/components/responses/BadRequest"
         '404':
           $ref: "#/components/responses/NotFound"
+        '429':
+          $ref: "#/components/responses/TooManyRequests"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '503':
+          $ref: "#/components/responses/ServiceUnavailable"
+  /v1/payments:
+    get:
+      tags:
+        - payments
+      summary: "Получение информации о платежах"
+      description: "Получение информации о платежах"
+      operationId: "getPayments"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          description: "Дата начала фильтрации платежей"
+          schema:
+            type: string
+            format: date-time
+            example: "2023-10-01T00:00:00Z"
+        - name: endDate
+          in: query
+          required: false
+          description: "Дата окончания фильтрации платежей"
+          schema:
+            type: string
+            format: date-time
+            example: "2023-10-31T23:59:59Z"
+        - name: minAmount
+          in: query
+          required: false
+          description: "Минимальная сумма платежа"
+          schema:
+            $ref: "#/components/schemas/QRCodeAmount"
+        - name: maxAmount
+          in: query
+          required: false
+          description: "Максимальная сумма платежа"
+          schema:
+            $ref: "#/components/schemas/QRCodeAmount"
+        - name: status
+          in: query
+          required: false
+          description: "Статус платежа"
+          schema:
+            type: string
+            enum:
+              - "FAILED"
+              - "COMPLETED"
+      responses:
+        '200':
+          description: "Платежи успешно получены"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '401':
+          $ref: "#/components/responses/Unauthorized"
         '429':
           $ref: "#/components/responses/TooManyRequests"
         '500':
@@ -596,6 +716,71 @@ components:
           $ref: "#/components/schemas/BeaconBluetoothId"
       required:
         - bluetoothId
+    PaymentId:
+      type: string
+      description: "Идентификатор платежа"
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    Payment:
+      type: object
+      description: "Информация о платеже"
+      properties:
+        id:
+          $ref: "#/components/schemas/PaymentId"
+        status:
+          type: string
+          enum:
+            - "COMPLETED"
+            - "FAILED"
+        amount:
+          $ref: "#/components/schemas/QRCodeAmount"
+        createdAt:
+          type: string
+          format: date-time
+          description: "Дата и время создания платежа"
+          example: "2015-11-03T10:15:57.000Z"
+        sender:
+          $ref: "#/components/schemas/User"
+        recipient:
+          type: object
+          properties:
+            account:
+              $ref: "#/components/schemas/Account"
+            profile:
+              $ref: "#/components/schemas/User"
+        paymentMethod:
+          type: string
+          enum:
+            - BEACON
+            - QRCODE
+    User:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UserId"
+        firstName:
+          $ref: "#/components/schemas/UserFirstName"
+        lastName:
+          $ref: "#/components/schemas/UserLastName"
+        middleName:
+          $ref: "#/components/schemas/UserMiddleName"
+    UserId:
+      type: string
+      format: uuid
+      description: "Уникальный айди пользователя"
+      example: "01961775-6c2d-752e-a795-b79236b4fa47"
+    UserFirstName:
+      type: string
+      description: "Имя пользователя"
+      example: "Иван"
+    UserLastName:
+      type: string
+      description: "Фамилия пользователя"
+      example: "Иванов"
+    UserMiddleName:
+      type: string
+      description: "Отчество пользователя"
+      example: "Иванович"
   responses:
     NotFound:
       description: "Ресурс не найден"

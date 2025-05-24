@@ -1,5 +1,6 @@
 package ru.finess.finess.payment.application;
 
+import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
 import ru.finess.finess.identity.domain.UserId;
@@ -14,5 +15,11 @@ public interface AccountRepository {
 
   Optional<Account> findById(@NonNull AccountId id);
 
+  Optional<Account> findByIdForUser(@NonNull UserId user, @NonNull AccountId accountId);
+
+  List<Account> findAllForUser(@NonNull UserId user);
+
   boolean existsById(@NonNull AccountId accountId);
+
+  void delete(@NonNull Account account);
 }
