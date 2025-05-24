@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.finess.finess.IntegrationTest;
 import ru.finess.finess.identity.domain.User;
+import ru.finess.finess.identity.domain.UserFullName;
 import ru.finess.finess.identity.domain.UserPassword;
 
 @IntegrationTest
@@ -20,8 +21,9 @@ class UserRegistrationUseCaseIT {
   void testRegistration() {
     // Arrange
     UserPassword password = new UserPassword("SomePassword21");
+    UserFullName fullName = new UserFullName("Ivan", "Ivanov", "Ivanovich");
     UserRegistrationUseCase.Parameters parameters =
-        new UserRegistrationUseCase.Parameters(password);
+        new UserRegistrationUseCase.Parameters(password, fullName);
 
     // Act
     Result<User, Void> actual = sut.execute(parameters);

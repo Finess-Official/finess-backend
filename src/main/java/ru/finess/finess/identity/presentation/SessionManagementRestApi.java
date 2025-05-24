@@ -39,8 +39,13 @@ public class SessionManagementRestApi implements SessionManagementApi {
   public ResponseEntity<SessionDto> registerUser(
       UserRegistrationParametersDto userRegistrationParametersDto) {
     UserPassword password = new UserPassword(userRegistrationParametersDto.getPassword());
+    UserFullName userFullName =
+        new UserFullName(
+            userRegistrationParametersDto.getFirstName(),
+            userRegistrationParametersDto.getLastName(),
+            userRegistrationParametersDto.getMiddleName());
 
-    return registerUser(password)
+    return registerUser(password, userFullName)
         .map(User::id)
         .flatMap(this::createSession)
         .map(this::toDto)
@@ -70,9 +75,9 @@ public class SessionManagementRestApi implements SessionManagementApi {
         .recoverError(error -> ResponseEntity.status(error).build());
   }
 
-  private Result<User, HttpStatus> registerUser(UserPassword password) {
+  private Result<User, HttpStatus> registerUser(UserPassword password, UserFullName userFullName) {
     UserRegistrationUseCase.Parameters parameters =
-        new UserRegistrationUseCase.Parameters(password);
+        new UserRegistrationUseCase.Parameters(password, userFullName);
 
     return registrationUseCase
         .execute(parameters)

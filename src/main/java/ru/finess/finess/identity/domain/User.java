@@ -15,11 +15,14 @@ import lombok.experimental.Accessors;
 public class User {
 
   @Builder
-  private static User create(@NonNull UserEncodedPassword encodedPassword) {
-    return new User(UserId.random(), encodedPassword);
+  private static User create(
+      @NonNull UserEncodedPassword encodedPassword, @NonNull UserFullName fullName) {
+    return new User(UserId.random(), encodedPassword, fullName);
   }
 
   @EmbeddedId private UserId id;
 
   private UserEncodedPassword hashedPassword;
+
+  private UserFullName fullName;
 }
